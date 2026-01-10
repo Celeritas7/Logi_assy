@@ -1,0 +1,19 @@
+The index_R002 should read and generate the dropdown based on the Jason files in the same fodler. The titles visible in the dropdown should be the final blockname inside the Jason file. The tree should expandable from the right to left.
+
+
+
+
+
+
+
+
+I want the Fastener to be visible in the arrow which connects 2 blocks.
+
+Want to file to take input as csv file online. SO that the markings of completed assembly will be visible inside the tree directly.
+
+
+Want to launch it on cloud as it can be visble to anyone with the link to check the progress.
+
+
+
+I want the tree to be like the sun ray shape

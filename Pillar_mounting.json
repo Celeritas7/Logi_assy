@@ -1,0 +1,44 @@
+{
+    "Pillar �ｿｽ�ｿｽ�ｿｽ�ｿ": {
+        "Logi base assy": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 1,
+            "Fastener": "",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Pillar assy": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 1,
+            "Fastener": "",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Pillar LH holder plate": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 1,
+            "Fastener": "CBE8-35",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Pillar RH holder plate": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 1,
+            "Fastener": "CBE8-35",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Pillar back holder plate": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 1,
+            "Fastener": "CB8-100",
+            "Fastener_Qty": 0,
+            "Children": {}
+        }
+    }
+}

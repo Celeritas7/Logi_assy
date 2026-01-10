@@ -1,0 +1,94 @@
+{
+    "SPINDLE_ASSY": {
+        "SHAFT_COMP": {
+            "Part_Name": "Shaft Component",
+            "Part_Number": "SC-1001",
+            "Qty": 1,
+            "Fastener": "M10x30",
+            "Fastener_Qty": 8,
+            "Children": {
+                "MAIN_SHAFT_COMP": {
+                    "Part_Name": "Main Shaft Component",
+                    "Part_Number": "MSC-2103",
+                    "Qty": 1,
+                    "Fastener": "M8x25",
+                    "Fastener_Qty": 6,
+                    "Children": {
+                        "BRG_6205": {
+                            "Part_Name": "Bearing 6205",
+                            "Part_Number": "BRG-6205",
+                            "Qty": 2,
+                            "Fastener": "M5x12 SHCS",
+                            "Fastener_Qty": 4,
+                            "Children": {}
+                        },
+                        "KEY_8x7": {
+                            "Part_Name": "Shaft Key 8ﾃ�7",
+                            "Part_Number": "KEY-8x7",
+                            "Qty": 1,
+                            "Fastener": "None",
+                            "Fastener_Qty": 0,
+                            "Children": {}
+                        },
+                        "GEAR_M2_30T": {
+                            "Part_Name": "Spur Gear M2 30T",
+                            "Part_Number": "GEAR-M2-30T",
+                            "Qty": 1,
+                            "Fastener": "M6x20 Hex Bolt",
+                            "Fastener_Qty": 4,
+                            "Children": {}
+                        },
+                        "END_COVER_1": {
+                            "Part_Name": "End Cover 1",
+                            "Part_Number": "EC-01",
+                            "Qty": 1,
+                            "Fastener": "M5x10",
+                            "Fastener_Qty": 6,
+                            "Children": {}
+                        },
+                        "END_COVER_2": {
+                            "Part_Name": "End Cover 2",
+                            "Part_Number": "EC-02",
+                            "Qty": 1,
+                            "Fastener": "M5x10",
+                            "Fastener_Qty": 6,
+                            "Children": {}
+                        }
+                    }
+                },
+                "SHAFT_SLEEVE": {
+                    "Part_Name": "Shaft Sleeve",
+                    "Part_Number": "SLV-01",
+                    "Qty": 1,
+                    "Fastener": "Press Fit",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "BAFFLE_PLATE": {
+                    "Part_Name": "Baffle Plate",
+                    "Part_Number": "BP-02",
+                    "Qty": 1,
+                    "Fastener": "M5x8",
+                    "Fastener_Qty": 4,
+                    "Children": {}
+                }
+            }
+        },
+        "DUST_CAP_1": {
+            "Part_Name": "Dust Cap 1",
+            "Part_Number": "DC-01",
+            "Qty": 1,
+            "Fastener": "Press Fit",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "DUST_CAP_2": {
+            "Part_Name": "Dust Cap 2",
+            "Part_Number": "DC-02",
+            "Qty": 1,
+            "Fastener": "Press Fit",
+            "Fastener_Qty": 0,
+            "Children": {}
+        }
+    }
+}

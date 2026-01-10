@@ -1,0 +1,150 @@
+{
+    "Pillar assy": {
+        "Pillar body assy": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 0,
+            "Fastener": "",
+            "Fastener_Qty": 0,
+            "Children": {
+                "Pillar": {
+                    "Part_Name": "",
+                    "Part_Number": "TH25-2090-HV-EH-OB2-C-N-N-4381264",
+                    "Qty": 0,
+                    "Fastener": "",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Coupling": {
+                    "Part_Name": "",
+                    "Part_Number": "5P-788557-626140",
+                    "Qty": 0,
+                    "Fastener": "Original",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Coupling cover": {
+                    "Part_Name": "",
+                    "Part_Number": "TL010-0002-0023-7 IPS",
+                    "Qty": 0,
+                    "Fastener": "Original",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Motor mounting plate": {
+                    "Part_Name": "",
+                    "Part_Number": "5P-788557-626418 / MEPMC-4C2-3651S",
+                    "Qty": 0,
+                    "Fastener": "CBE5-15",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Motor": {
+                    "Part_Name": "",
+                    "Part_Number": "ABR060-006-S2-P2",
+                    "Qty": 0,
+                    "Fastener": "CBE5-15",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Side strips": {
+                    "Part_Name": "",
+                    "Part_Number": "Come with pillar",
+                    "Qty": 0,
+                    "Fastener": "MSSF5-6",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Top strips": {
+                    "Part_Name": "",
+                    "Part_Number": "",
+                    "Qty": 0,
+                    "Fastener": "MSSK5-8",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Pillar cover": {
+                    "Part_Name": "",
+                    "Part_Number": "",
+                    "Qty": 0,
+                    "Fastener": "CBST6-25, CBE6-18",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Stopper block": {
+                    "Part_Name": "",
+                    "Part_Number": "",
+                    "Qty": 0,
+                    "Fastener": "CBE6-20",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Stopper angle bracket": {
+                    "Part_Name": "",
+                    "Part_Number": "",
+                    "Qty": 0,
+                    "Fastener": "",
+                    "Fastener_Qty": 0,
+                    "Children": {}
+                },
+                "Dead weight carrier (for trail)": {
+                    "Part_Name": "",
+                    "Part_Number": "",
+                    "Qty": 0,
+                    "Fastener": "",
+                    "Fastener_Qty": 0,
+                    "Children": {
+                        "I-bolt": {
+                            "Part_Name": "",
+                            "Part_Number": "",
+                            "Qty": 0,
+                            "Fastener": "",
+                            "Fastener_Qty": 0,
+                            "Children": {}
+                        }
+                    }
+                }
+            }
+        },
+        "Vertical rail 1": {
+            "Part_Name": "",
+            "Part_Number": "SHS20V2UU+2540L-II",
+            "Qty": 0,
+            "Fastener": "CBE6-20",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Spacer plate": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 0,
+            "Fastener": "CBE4-8",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Vertical rail 2": {
+            "Part_Name": "",
+            "Part_Number": "SHS20V2UU+2540L-II",
+            "Qty": 0,
+            "Fastener": "CBE6-20",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Stoper block": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 0,
+            "Fastener": "CBE6-20",
+            "Fastener_Qty": 0,
+            "Children": {}
+        },
+        "Angle bracket": {
+            "Part_Name": "",
+            "Part_Number": "",
+            "Qty": 0,
+            "Fastener": "",
+            "Fastener_Qty": 0,
+            "Children": {}
+        }
+    }
+}
