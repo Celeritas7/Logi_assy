@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google Sheet Test - Single Tab</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #2c3e50;
+    }
+    
+    .status-box {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .status-box h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .success { color: #27ae60; }
+    .error { color: #e74c3c; }
+    .info { color: #3498db; }
+    
+    pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    
+    th {
+      background: #3498db;
+      color: white;
+    }
+    
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    
+    .tree-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      overflow: auto;
+    }
+    
+    .node rect, .node ellipse, .node polygon {
+      stroke-width: 2px;
+    }
+    
+    .node text {
+      font-size: 11px;
+    }
+    
+    .link {
+      fill: none;
+      stroke: #888;
+      stroke-width: 1.5px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 14px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔧 Google Sheet Test - Single Tab</h1>
+  
+  <div class="status-box">
+    <h3>Configuration</h3>
+    <p><strong>Sheet ID:</strong> <code>1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo</code></p>
+    <p><strong>Tab GID:</strong> <code>1604202891</code> (Logi_base_L1)</p>
+    <p><strong>CSV URL:</strong></p>
+    <pre id="csvUrl"></pre>
+    <button onclick="loadData()">🔄 Load Data</button>
+    <button onclick="testFetch()">🧪 Test Fetch Only</button>
+  </div>
+  
+  <div class="status-box">
+    <h3>Step 1: Fetch Status</h3>
+    <p id="fetchStatus" class="info">Not started...</p>
+  </div>
+  
+  <div class="status-box">
+    <h3>Step 2: Raw CSV Response (First 2000 chars)</h3>
+    <pre id="rawCsv">Not loaded yet...</pre>
+  </div>
+  
+  <div class="status-box">
+    <h3>Step 3: Parsed CSV Data</h3>
+    <div id="parsedData">Not parsed yet...</div>
+  </div>
+  
+  <div class="status-box">
+    <h3>Step 4: Hierarchy Structure</h3>
+    <pre id="hierarchyJson">Not built yet...</pre>
+  </div>
+  
+  <div class="tree-container">
+    <h3>Step 5: Tree Visualization</h3>
+    <svg id="treeSvg" width="1000" height="600"></svg>
+  </div>
+</div>
+
+<script>
+// ==================================================
+// CONFIGURATION
+// ==================================================
+const SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
+const TAB_GID = "1604202891";
+
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${TAB_GID}`;
+
+// Show the URL
+document.getElementById('csvUrl').textContent = CSV_URL;
+
+// ==================================================
+// TEST FETCH ONLY
+// ==================================================
+async function testFetch() {
+  const fetchStatus = document.getElementById('fetchStatus');
+  const rawCsvEl = document.getElementById('rawCsv');
+  
+  fetchStatus.textContent = "Fetching...";
+  fetchStatus.className = "info";
+  
+  try {
+    const response = await fetch(CSV_URL);
+    
+    fetchStatus.innerHTML = `
+      <strong>Response Status:</strong> ${response.status} ${response.statusText}<br>
+      <strong>Content-Type:</strong> ${response.headers.get('content-type')}<br>
+      <strong>OK:</strong> ${response.ok}
+    `;
+    fetchStatus.className = response.ok ? "success" : "error";
+    
+    const text = await response.text();
+    rawCsvEl.textContent = text.substring(0, 2000) + (text.length > 2000 ? '\n\n... (truncated)' : '');
+    
+    return text;
+  } catch (error) {
+    fetchStatus.textContent = `FETCH ERROR: ${error.message}`;
+    fetchStatus.className = "error";
+    rawCsvEl.textContent = `Error: ${error.message}\n\nThis usually means:\n1. Google Sheet is not published to web\n2. CORS issue (try opening the CSV URL directly in browser)`;
+    return null;
+  }
+}
+
+// ==================================================
+// CSV PARSING
+// ==================================================
+function parseCSV(csvText) {
+  const lines = csvText.split('\n').map(line => line.trim()).filter(line => line);
+  if (lines.length === 0) return [];
+  
+  const headers = parseCSVLine(lines[0]);
+  console.log('Headers found:', headers);
+  
+  const data = [];
+  
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length === 0) continue;
+    
+    const row = {};
+    headers.forEach((header, index) => {
+      row[header.trim()] = (values[index] || '').trim();
+    });
+    
+    data.push(row);
+  }
+  
+  return { headers, data };
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  
+  return result;
+}
+
+// ==================================================
+// CSV TO HIERARCHY
+// ==================================================
+function csvToHierarchy(csvData) {
+  // Filter rows with Seq and Child
+  const validRows = csvData.filter(row => row.Seq && row.Child);
+  
+  console.log('Valid rows:', validRows.length);
+  
+  if (validRows.length === 0) {
+    return { error: "No valid rows found (need Seq and Child columns)" };
+  }
+  
+  // Find root (Parent = ROOT)
+  const rootRow = validRows.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
+  
+  if (!rootRow) {
+    return { error: "No ROOT found. One row must have Parent='ROOT'" };
+  }
+  
+  const rootName = rootRow.Child;
+  console.log('Root name:', rootName);
+  
+  // Build children map
+  const childrenMap = {};
+  validRows.forEach(row => {
+    const parent = row.Parent;
+    if (!childrenMap[parent]) {
+      childrenMap[parent] = [];
+    }
+    childrenMap[parent].push(row);
+  });
+  
+  // Sort by Seq
+  Object.keys(childrenMap).forEach(parent => {
+    childrenMap[parent].sort((a, b) => {
+      return (a.Seq || '').localeCompare(b.Seq || '', undefined, { numeric: true });
+    });
+  });
+  
+  // Recursive build
+  function buildNode(name, rowData) {
+    const children = childrenMap[name] || [];
+    const childNodes = children.map(childRow => buildNode(childRow.Child, childRow));
+    
+    return {
+      name: name,
+      partNumber: rowData ? rowData.Part_Number || '' : '',
+      fastener: rowData ? rowData.Fastener || '' : '',
+      fastenerQty: rowData ? parseInt(rowData.Fastener_Qty) || 0 : 0,
+      status: rowData ? rowData.Status || '' : '',
+      children: childNodes.length > 0 ? childNodes : null
+    };
+  }
+  
+  return buildNode(rootName, rootRow);
+}
+
+// ==================================================
+// RENDER TREE
+// ==================================================
+function renderTree(hierarchyData) {
+  const svg = d3.select('#treeSvg');
+  svg.selectAll('*').remove();
+  
+  if (!hierarchyData || hierarchyData.error) {
+    svg.append('text')
+      .attr('x', 50)
+      .attr('y', 50)
+      .attr('fill', 'red')
+      .text('Error: ' + (hierarchyData?.error || 'No data'));
+    return;
+  }
+  
+  const root = d3.hierarchy(hierarchyData);
+  
+  const margin = { top: 40, right: 150, bottom: 40, left: 100 };
+  const width = 1000 - margin.left - margin.right;
+  const height = Math.max(400, root.descendants().length * 40);
+  
+  svg.attr('height', height + margin.top + margin.bottom);
+  
+  const g = svg.append('g')
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+  
+  const treeLayout = d3.tree().size([height, width]);
+  treeLayout(root);
+  
+  // Links
+  g.selectAll('.link')
+    .data(root.links())
+    .enter()
+    .append('path')
+    .attr('class', 'link')
+    .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x));
+  
+  // Nodes
+  const nodes = g.selectAll('.node')
+    .data(root.descendants())
+    .enter()
+    .append('g')
+    .attr('transform', d => `translate(${d.y}, ${d.x})`);
+  
+  nodes.append('rect')
+    .attr('x', -60)
+    .attr('y', -15)
+    .attr('width', 120)
+    .attr('height', 30)
+    .attr('fill', '#fee8e8')
+    .attr('stroke', '#b2a2a2')
+    .attr('rx', 5);
+  
+  nodes.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '0.35em')
+    .attr('font-size', '10px')
+    .text(d => {
+      const name = d.data.name;
+      return name.length > 18 ? name.substring(0, 16) + '...' : name;
+    });
+}
+
+// ==================================================
+// MAIN LOAD FUNCTION
+// ==================================================
+async function loadData() {
+  const parsedDataEl = document.getElementById('parsedData');
+  const hierarchyEl = document.getElementById('hierarchyJson');
+  
+  // Step 1 & 2: Fetch
+  const csvText = await testFetch();
+  if (!csvText) return;
+  
+  // Step 3: Parse
+  const { headers, data } = parseCSV(csvText);
+  
+  if (data.length === 0) {
+    parsedDataEl.innerHTML = '<p class="error">No data rows found in CSV</p>';
+    return;
+  }
+  
+  // Show as table
+  let tableHtml = '<table><tr>';
+  headers.forEach(h => tableHtml += `<th>${h}</th>`);
+  tableHtml += '</tr>';
+  
+  data.slice(0, 20).forEach(row => {
+    tableHtml += '<tr>';
+    headers.forEach(h => tableHtml += `<td>${row[h] || ''}</td>`);
+    tableHtml += '</tr>';
+  });
+  
+  if (data.length > 20) {
+    tableHtml += `<tr><td colspan="${headers.length}">... and ${data.length - 20} more rows</td></tr>`;
+  }
+  tableHtml += '</table>';
+  
+  parsedDataEl.innerHTML = tableHtml;
+  
+  // Step 4: Build hierarchy
+  const hierarchy = csvToHierarchy(data);
+  hierarchyEl.textContent = JSON.stringify(hierarchy, null, 2);
+  
+  // Step 5: Render tree
+  renderTree(hierarchy);
+}
+
+// Auto-load on page load
+// loadData();
+</script>
+
+</body>
+</html>

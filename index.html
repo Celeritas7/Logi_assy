@@ -3,196 +3,451 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Google Sheet Test - Single Tab</title>
+  <title>Assembly Tree Viewer</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
       background: #f0f4f8;
+      min-height: 100vh;
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    h1 {
-      color: #2c3e50;
-    }
-    
-    .status-box {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .status-box h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    
-    .success { color: #27ae60; }
-    .error { color: #e74c3c; }
-    .info { color: #3498db; }
-    
-    pre {
+
+    /* Header / Controls */
+    .header {
       background: #2c3e50;
-      color: #ecf0f1;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-      font-size: 12px;
-      max-height: 300px;
-      overflow-y: auto;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
     }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 12px;
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 500;
     }
-    
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
+
+    .header select {
+      padding: 8px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      min-width: 200px;
     }
-    
-    th {
+
+    .header label {
+      font-size: 14px;
+    }
+
+    .header-btn {
+      padding: 8px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
       background: #3498db;
       color: white;
+      transition: background 0.2s;
     }
-    
-    tr:nth-child(even) {
-      background: #f9f9f9;
+
+    .header-btn:hover {
+      background: #2980b9;
     }
-    
-    .tree-container {
+
+    .loading {
+      color: #f39c12;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #e74c3c;
+      font-size: 14px;
+    }
+
+    /* Legend */
+    .legend {
       background: white;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 10px 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      flex-wrap: wrap;
+    }
+
+    .legend-section {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-title {
+      font-weight: 600;
+      color: #333;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: #555;
+    }
+
+    .legend-shape {
+      width: 24px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    .legend-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid;
+    }
+
+    .legend-divider {
+      width: 1px;
+      height: 30px;
+      background: #ddd;
+      margin: 0 5px;
+    }
+
+    /* SVG Container */
+    .tree-container {
+      width: 100%;
+      height: calc(100vh - 140px);
       overflow: auto;
+      background: white;
     }
-    
-    .node rect, .node ellipse, .node polygon {
+
+    svg {
+      display: block;
+    }
+
+    /* Node styles */
+    .node {
+      cursor: pointer;
+    }
+
+    .node-shape {
       stroke-width: 2px;
+      transition: filter 0.2s;
     }
-    
-    .node text {
-      font-size: 11px;
+
+    .node:hover .node-shape {
+      filter: brightness(0.92);
     }
-    
+
+    .node-label {
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .node-pn {
+      pointer-events: none;
+      fill: #555;
+    }
+
+    .toggle-icon {
+      font-weight: bold;
+      font-size: 12px;
+      fill: #333;
+      pointer-events: none;
+    }
+
+    /* Edge styles */
     .link {
       fill: none;
-      stroke: #888;
       stroke-width: 1.5px;
     }
-    
-    button {
-      padding: 10px 20px;
-      font-size: 14px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-right: 10px;
+
+    .link-label {
+      font-size: 9px;
+      pointer-events: none;
+      font-weight: 500;
     }
-    
-    button:hover {
-      background: #2980b9;
+
+    /* Status indicator */
+    .status-indicator {
+      stroke-width: 2px;
+    }
+
+    /* Collapse indicator */
+    .collapse-indicator {
+      fill: white;
+      stroke: #666;
+      stroke-width: 1.5px;
+    }
+
+    /* Error/Info messages */
+    .message {
+      padding: 40px;
+      text-align: center;
+      font-size: 16px;
+      color: #666;
+    }
+
+    .message.error {
+      color: #e74c3c;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>🔧 Google Sheet Test - Single Tab</h1>
-  
-  <div class="status-box">
-    <h3>Configuration</h3>
-    <p><strong>Sheet ID:</strong> <code>1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo</code></p>
-    <p><strong>Tab GID:</strong> <code>1604202891</code> (Logi_base_L1)</p>
-    <p><strong>CSV URL:</strong></p>
-    <pre id="csvUrl"></pre>
-    <button onclick="loadData()">🔄 Load Data</button>
-    <button onclick="testFetch()">🧪 Test Fetch Only</button>
+<div class="header">
+  <h1>🔧 Assembly Tree Viewer</h1>
+  <label for="fileSelect">Select Assembly:</label>
+  <select id="fileSelect">
+    <option value="">Loading...</option>
+  </select>
+  <button class="header-btn" onclick="refreshData()">🔄 Refresh</button>
+  <span id="statusIndicator" class="loading"></span>
+</div>
+
+<div class="legend">
+  <!-- Shape Legend -->
+  <div class="legend-section">
+    <span class="legend-title">Shapes:</span>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#f5f5f5" stroke="#ababab" stroke-width="1.5" rx="0"/>
+      </svg>
+      <span>Leaf</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#fee8e8" stroke="#b2a2a2" stroke-width="1.5" rx="3"/>
+      </svg>
+      <span>Minor</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#fcdaf7" stroke="#b098ac" stroke-width="1.5" rx="5"/>
+      </svg>
+      <span>Mid</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <ellipse cx="12" cy="8" rx="11" ry="7" fill="#f3e9cf" stroke="#aaa391" stroke-width="1.5"/>
+      </svg>
+      <span>Major</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <polygon points="5,1 19,1 23,8 19,15 5,15 1,8" fill="#b6d7a8" stroke="#7f9675" stroke-width="1.5"/>
+      </svg>
+      <span>Final</span>
+    </div>
   </div>
-  
-  <div class="status-box">
-    <h3>Step 1: Fetch Status</h3>
-    <p id="fetchStatus" class="info">Not started...</p>
+
+  <div class="legend-divider"></div>
+
+  <!-- Status Legend -->
+  <div class="legend-section">
+    <span class="legend-title">Status:</span>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #27ae60; border-color: #1e8449;"></div>
+      <span>Done</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #f1c40f; border-color: #d4ac0d;"></div>
+      <span>In Progress</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #bdc3c7; border-color: #95a5a6;"></div>
+      <span>Not Started</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #e74c3c; border-color: #c0392b;"></div>
+      <span>Blocked</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #e67e22; border-color: #d35400;"></div>
+      <span>On Hold</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #3498db; border-color: #2980b9;"></div>
+      <span>Review</span>
+    </div>
   </div>
-  
-  <div class="status-box">
-    <h3>Step 2: Raw CSV Response (First 2000 chars)</h3>
-    <pre id="rawCsv">Not loaded yet...</pre>
+
+  <div class="legend-divider"></div>
+
+  <!-- Fastener Color Legend -->
+  <div class="legend-section">
+    <span class="legend-title">Fasteners:</span>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #3498db;"></div>
+      <span>CBE</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #9b59b6;"></div>
+      <span>CBST</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #27ae60;"></div>
+      <span>M</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #e67e22;"></div>
+      <span>MS</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #e74c3c;"></div>
+      <span>Press</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #7f8c8d;"></div>
+      <span>Original</span>
+    </div>
   </div>
-  
-  <div class="status-box">
-    <h3>Step 3: Parsed CSV Data</h3>
-    <div id="parsedData">Not parsed yet...</div>
-  </div>
-  
-  <div class="status-box">
-    <h3>Step 4: Hierarchy Structure</h3>
-    <pre id="hierarchyJson">Not built yet...</pre>
-  </div>
-  
-  <div class="tree-container">
-    <h3>Step 5: Tree Visualization</h3>
-    <svg id="treeSvg" width="1000" height="600"></svg>
-  </div>
+</div>
+
+<div class="tree-container" id="treeContainer">
+  <svg id="treeSvg"></svg>
 </div>
 
 <script>
 // ==================================================
-// CONFIGURATION
+// GOOGLE SHEET CONFIGURATION
 // ==================================================
-const SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
-const TAB_GID = "1604202891";
+const GOOGLE_SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
 
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${TAB_GID}`;
+const SHEET_TABS = [
+  { name: "Logi_base_L1", gid: "1604202891" },
+  { name: "Pillar_L2", gid: "0" },
+  { name: "1-2_Pillar_mounting", gid: "207097345" },
+  { name: "L3", gid: "56854072" },
+  { name: "L3_mounting", gid: "180536805" },
+  { name: "Motor_mountings", gid: "1949211141" }
+];
 
-// Show the URL
-document.getElementById('csvUrl').textContent = CSV_URL;
+function getSheetUrl(gid) {
+  return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}`;
+}
 
 // ==================================================
-// TEST FETCH ONLY
+// STATUS CONFIGURATION
 // ==================================================
-async function testFetch() {
-  const fetchStatus = document.getElementById('fetchStatus');
-  const rawCsvEl = document.getElementById('rawCsv');
-  
-  fetchStatus.textContent = "Fetching...";
-  fetchStatus.className = "info";
-  
-  try {
-    const response = await fetch(CSV_URL);
-    
-    fetchStatus.innerHTML = `
-      <strong>Response Status:</strong> ${response.status} ${response.statusText}<br>
-      <strong>Content-Type:</strong> ${response.headers.get('content-type')}<br>
-      <strong>OK:</strong> ${response.ok}
-    `;
-    fetchStatus.className = response.ok ? "success" : "error";
-    
-    const text = await response.text();
-    rawCsvEl.textContent = text.substring(0, 2000) + (text.length > 2000 ? '\n\n... (truncated)' : '');
-    
-    return text;
-  } catch (error) {
-    fetchStatus.textContent = `FETCH ERROR: ${error.message}`;
-    fetchStatus.className = "error";
-    rawCsvEl.textContent = `Error: ${error.message}\n\nThis usually means:\n1. Google Sheet is not published to web\n2. CORS issue (try opening the CSV URL directly in browser)`;
-    return null;
-  }
+const STATUS_COLORS = {
+  DONE:        { fill: "#27ae60", stroke: "#1e8449" },
+  IN_PROGRESS: { fill: "#f1c40f", stroke: "#d4ac0d" },
+  NOT_STARTED: { fill: "#bdc3c7", stroke: "#95a5a6" },
+  BLOCKED:     { fill: "#e74c3c", stroke: "#c0392b" },
+  ON_HOLD:     { fill: "#e67e22", stroke: "#d35400" },
+  REVIEW:      { fill: "#3498db", stroke: "#2980b9" },
+  DEFAULT:     { fill: "#bdc3c7", stroke: "#95a5a6" }
+};
+
+function getStatusColor(status) {
+  if (!status) return STATUS_COLORS.DEFAULT;
+  const upper = status.toUpperCase().replace(/\s+/g, '_');
+  return STATUS_COLORS[upper] || STATUS_COLORS.DEFAULT;
+}
+
+// ==================================================
+// FASTENER COLOR MAPPING
+// ==================================================
+const FASTENER_COLORS = {
+  CBE: "#3498db",
+  CBST: "#9b59b6",
+  M: "#27ae60",
+  MS: "#e67e22",
+  PRESS: "#e74c3c",
+  ORIGINAL: "#7f8c8d",
+  OTHER: "#2c3e50"
+};
+
+function getFastenerColor(fastener) {
+  if (!fastener || fastener === "" || fastener === "None") return null;
+  const upper = fastener.toUpperCase();
+  if (upper.includes("PRESS")) return FASTENER_COLORS.PRESS;
+  if (upper === "ORIGINAL") return FASTENER_COLORS.ORIGINAL;
+  if (upper.startsWith("CBST")) return FASTENER_COLORS.CBST;
+  if (upper.startsWith("CBE") || upper.startsWith("CB")) return FASTENER_COLORS.CBE;
+  if (upper.startsWith("MSSF") || upper.startsWith("MSSK") || upper.startsWith("MS")) return FASTENER_COLORS.MS;
+  if (/^M\d/.test(upper)) return FASTENER_COLORS.M;
+  return FASTENER_COLORS.OTHER;
+}
+
+// ==================================================
+// STYLE CONFIGURATION
+// ==================================================
+const STYLE_SCALE = [
+  { shape: "rectangle",               fill: "#f5f5f5" },
+  { shape: "rounded_rectangle",       fill: "#fee8e8" },
+  { shape: "rounded_rectangle_strong",fill: "#fcdaf7" },
+  { shape: "ellipse",                 fill: "#f3e9cf" },
+  { shape: "hexagon",                 fill: "#b6d7a8" },
+];
+
+const FONT_SIZES = [10, 12, 14, 16, 18, 20];
+const NODE_WIDTH = 150;
+const NODE_HEIGHT = 50;
+
+// ==================================================
+// GLOBAL STATE
+// ==================================================
+let loadedData = {};
+let currentRoot = null;
+let maxDepth = 0;
+let simulation = null;
+
+// ==================================================
+// UTILITY FUNCTIONS
+// ==================================================
+function darkenColor(hex, factor = 0.7) {
+  hex = hex.replace('#', '');
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  r = Math.floor(r * factor);
+  g = Math.floor(g * factor);
+  b = Math.floor(b * factor);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+function getStyleForDepth(depth, maxDepth) {
+  if (maxDepth === 0) return STYLE_SCALE[STYLE_SCALE.length - 1];
+  const normalizedDepth = 1 - (depth / maxDepth);
+  const index = Math.round(normalizedDepth * (STYLE_SCALE.length - 1));
+  return STYLE_SCALE[index];
+}
+
+function getFontSize(depth, maxDepth) {
+  if (maxDepth === 0) return FONT_SIZES[FONT_SIZES.length - 1];
+  const normalizedDepth = 1 - (depth / maxDepth);
+  const index = Math.round(normalizedDepth * (FONT_SIZES.length - 1));
+  return FONT_SIZES[index];
+}
+
+function setStatus(msg, type = 'loading') {
+  const el = document.getElementById('statusIndicator');
+  el.textContent = msg;
+  el.className = type;
 }
 
 // ==================================================
@@ -203,8 +458,6 @@ function parseCSV(csvText) {
   if (lines.length === 0) return [];
   
   const headers = parseCSVLine(lines[0]);
-  console.log('Headers found:', headers);
-  
   const data = [];
   
   for (let i = 1; i < lines.length; i++) {
@@ -216,10 +469,13 @@ function parseCSV(csvText) {
       row[header.trim()] = (values[index] || '').trim();
     });
     
+    // Skip empty rows (no Seq or no Child)
+    if (!row.Seq || !row.Child) continue;
+    
     data.push(row);
   }
   
-  return { headers, data };
+  return data;
 }
 
 function parseCSVLine(line) {
@@ -245,31 +501,22 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO HIERARCHY
+// CSV TO HIERARCHY CONVERSION
 // ==================================================
 function csvToHierarchy(csvData) {
-  // Filter rows with Seq and Child
-  const validRows = csvData.filter(row => row.Seq && row.Child);
-  
-  console.log('Valid rows:', validRows.length);
-  
-  if (validRows.length === 0) {
-    return { error: "No valid rows found (need Seq and Child columns)" };
-  }
-  
   // Find root (Parent = ROOT)
-  const rootRow = validRows.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
+  const rootRow = csvData.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
   
   if (!rootRow) {
-    return { error: "No ROOT found. One row must have Parent='ROOT'" };
+    console.error('No ROOT found in CSV');
+    return null;
   }
   
   const rootName = rootRow.Child;
-  console.log('Root name:', rootName);
   
-  // Build children map
+  // Build lookup map
   const childrenMap = {};
-  validRows.forEach(row => {
+  csvData.forEach(row => {
     const parent = row.Parent;
     if (!childrenMap[parent]) {
       childrenMap[parent] = [];
@@ -277,10 +524,12 @@ function csvToHierarchy(csvData) {
     childrenMap[parent].push(row);
   });
   
-  // Sort by Seq
+  // Sort children by Seq
   Object.keys(childrenMap).forEach(parent => {
     childrenMap[parent].sort((a, b) => {
-      return (a.Seq || '').localeCompare(b.Seq || '', undefined, { numeric: true });
+      const seqA = a.Seq || '';
+      const seqB = b.Seq || '';
+      return seqA.localeCompare(seqB, undefined, { numeric: true });
     });
   });
   
@@ -295,6 +544,7 @@ function csvToHierarchy(csvData) {
       fastener: rowData ? rowData.Fastener || '' : '',
       fastenerQty: rowData ? parseInt(rowData.Fastener_Qty) || 0 : 0,
       status: rowData ? rowData.Status || '' : '',
+      qty: rowData ? parseInt(rowData.Qty) || 1 : 1,
       children: childNodes.length > 0 ? childNodes : null
     };
   }
@@ -303,116 +553,362 @@ function csvToHierarchy(csvData) {
 }
 
 // ==================================================
-// RENDER TREE
+// LOAD DATA FROM GOOGLE SHEETS
 // ==================================================
-function renderTree(hierarchyData) {
+async function loadSheetData(tabConfig) {
+  const url = getSheetUrl(tabConfig.gid);
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    const csvText = await response.text();
+    const csvData = parseCSV(csvText);
+    const hierarchy = csvToHierarchy(csvData);
+    
+    return hierarchy;
+  } catch (error) {
+    console.error(`Error loading ${tabConfig.name}:`, error);
+    throw error;
+  }
+}
+
+async function loadAllSheets() {
+  const select = document.getElementById('fileSelect');
+  setStatus('Loading sheets...');
+  select.innerHTML = '<option value="">Loading...</option>';
+  
+  const results = await Promise.allSettled(
+    SHEET_TABS.map(async (tab) => {
+      const hierarchy = await loadSheetData(tab);
+      return { tab, hierarchy };
+    })
+  );
+  
+  select.innerHTML = '';
+  let firstValidTab = null;
+  
+  results.forEach((result, index) => {
+    const tab = SHEET_TABS[index];
+    
+    if (result.status === 'fulfilled' && result.value.hierarchy) {
+      const { hierarchy } = result.value;
+      loadedData[tab.name] = hierarchy;
+      
+      const option = document.createElement('option');
+      option.value = tab.name;
+      // Use root node name as display text
+      option.textContent = hierarchy.name || tab.name;
+      select.appendChild(option);
+      
+      if (!firstValidTab) firstValidTab = tab.name;
+    } else {
+      console.warn(`Could not load ${tab.name}:`, result.reason);
+    }
+  });
+  
+  if (firstValidTab) {
+    setStatus('');
+    select.value = firstValidTab;
+    renderTree(firstValidTab);
+  } else {
+    setStatus('No valid data found. Check Google Sheet permissions.', 'error');
+    document.getElementById('treeContainer').innerHTML = 
+      '<div class="message error">Could not load any sheets. Make sure your Google Sheet is published to web.</div>';
+  }
+}
+
+function refreshData() {
+  loadedData = {};
+  loadAllSheets();
+}
+
+// ==================================================
+// CALCULATE MAX DEPTH
+// ==================================================
+function getMaxDepth(node, depth = 0) {
+  if (!node.children || node.children.length === 0) {
+    return depth;
+  }
+  return Math.max(...node.children.map(child => getMaxDepth(child, depth + 1)));
+}
+
+// ==================================================
+// DRAW SVG SHAPE
+// ==================================================
+function drawShape(selection, shapeType, width, height, fill, stroke, statusStroke) {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  
+  // Use status stroke if available, otherwise use default stroke
+  const finalStroke = statusStroke || stroke;
+  const strokeWidth = statusStroke ? 3 : 2;
+
+  selection.selectAll('.node-shape').remove();
+
+  if (shapeType === "rectangle") {
+    selection.insert('rect', ':first-child')
+      .attr('class', 'node-shape')
+      .attr('x', -halfW)
+      .attr('y', -halfH)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', fill)
+      .attr('stroke', finalStroke)
+      .attr('stroke-width', strokeWidth)
+      .attr('rx', 0);
+  }
+  else if (shapeType === "rounded_rectangle") {
+    selection.insert('rect', ':first-child')
+      .attr('class', 'node-shape')
+      .attr('x', -halfW)
+      .attr('y', -halfH)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', fill)
+      .attr('stroke', finalStroke)
+      .attr('stroke-width', strokeWidth)
+      .attr('rx', 8);
+  }
+  else if (shapeType === "rounded_rectangle_strong") {
+    selection.insert('rect', ':first-child')
+      .attr('class', 'node-shape')
+      .attr('x', -halfW)
+      .attr('y', -halfH)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('fill', fill)
+      .attr('stroke', finalStroke)
+      .attr('stroke-width', strokeWidth)
+      .attr('rx', 15);
+  }
+  else if (shapeType === "ellipse") {
+    selection.insert('ellipse', ':first-child')
+      .attr('class', 'node-shape')
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('rx', halfW)
+      .attr('ry', halfH)
+      .attr('fill', fill)
+      .attr('stroke', finalStroke)
+      .attr('stroke-width', strokeWidth);
+  }
+  else if (shapeType === "hexagon") {
+    const points = [
+      [-halfW + 12, -halfH],
+      [halfW - 12, -halfH],
+      [halfW, 0],
+      [halfW - 12, halfH],
+      [-halfW + 12, halfH],
+      [-halfW, 0]
+    ].map(p => p.join(',')).join(' ');
+
+    selection.insert('polygon', ':first-child')
+      .attr('class', 'node-shape')
+      .attr('points', points)
+      .attr('fill', fill)
+      .attr('stroke', finalStroke)
+      .attr('stroke-width', strokeWidth);
+  }
+}
+
+// ==================================================
+// RADIAL TREE LAYOUT (Root on Left, Expand Right)
+// ==================================================
+function renderTree(tabName) {
   const svg = d3.select('#treeSvg');
   svg.selectAll('*').remove();
   
-  if (!hierarchyData || hierarchyData.error) {
-    svg.append('text')
-      .attr('x', 50)
-      .attr('y', 50)
-      .attr('fill', 'red')
-      .text('Error: ' + (hierarchyData?.error || 'No data'));
+  if (simulation) {
+    simulation.stop();
+    simulation = null;
+  }
+
+  const hierarchyData = loadedData[tabName];
+  if (!hierarchyData) {
+    console.error('No data for:', tabName);
+    document.getElementById('treeContainer').innerHTML = 
+      '<div class="message error">No data available for this assembly.</div>';
     return;
   }
+
+  currentRoot = d3.hierarchy(hierarchyData);
+  maxDepth = getMaxDepth(hierarchyData);
+
+  // Initialize: expand first two levels, collapse rest
+  currentRoot.descendants().forEach((d) => {
+    if (d.depth > 1 && d.children) {
+      d._children = d.children;
+      d.children = null;
+    }
+  });
+
+  update();
+}
+
+function update() {
+  const svg = d3.select('#treeSvg');
+  const container = document.getElementById('treeContainer');
+
+  // Count visible nodes for sizing
+  const allNodes = currentRoot.descendants();
+  const visibleCount = allNodes.length;
   
-  const root = d3.hierarchy(hierarchyData);
-  
-  const margin = { top: 40, right: 150, bottom: 40, left: 100 };
-  const width = 1000 - margin.left - margin.right;
-  const height = Math.max(400, root.descendants().length * 40);
-  
-  svg.attr('height', height + margin.top + margin.bottom);
-  
+  const margin = { top: 60, right: 200, bottom: 60, left: 100 };
+  const width = Math.max(1400, (maxDepth + 1) * 300 + margin.left + margin.right);
+  const height = Math.max(800, visibleCount * 60 + margin.top + margin.bottom);
+
+  svg.attr('width', width).attr('height', height);
+
+  svg.selectAll('g.main').remove();
   const g = svg.append('g')
+    .attr('class', 'main')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
-  
-  const treeLayout = d3.tree().size([height, width]);
-  treeLayout(root);
-  
-  // Links
-  g.selectAll('.link')
-    .data(root.links())
+
+  // Use D3 tree layout with radial-like spreading
+  const treeLayout = d3.tree()
+    .size([height - margin.top - margin.bottom, width - margin.left - margin.right - 150])
+    .separation((a, b) => {
+      // More separation for nodes with many children
+      return (a.parent === b.parent ? 1 : 1.5);
+    });
+
+  treeLayout(currentRoot);
+
+  // Create curved link generator
+  const linkGenerator = d3.linkHorizontal()
+    .x(d => d.y)
+    .y(d => d.x);
+
+  // Draw links
+  const links = g.selectAll('.link')
+    .data(currentRoot.links())
     .enter()
     .append('path')
     .attr('class', 'link')
-    .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x));
-  
-  // Nodes
+    .attr('d', linkGenerator)
+    .attr('stroke', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color || '#aaa';
+    })
+    .attr('stroke-width', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color ? 2.5 : 1.5;
+    });
+
+  // Draw link labels (fastener info)
+  g.selectAll('.link-label')
+    .data(currentRoot.links())
+    .enter()
+    .append('text')
+    .attr('class', 'link-label')
+    .attr('x', d => (d.source.y + d.target.y) / 2)
+    .attr('y', d => (d.source.x + d.target.x) / 2 - 4)
+    .attr('text-anchor', 'middle')
+    .attr('fill', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color || '#666';
+    })
+    .text(d => {
+      const fastener = d.target.data.fastener;
+      const qty = d.target.data.fastenerQty;
+      if (!fastener || fastener === "None" || fastener === "") return "";
+      return qty ? `${fastener} ×${qty}` : fastener;
+    });
+
+  // Draw nodes
   const nodes = g.selectAll('.node')
-    .data(root.descendants())
+    .data(currentRoot.descendants())
     .enter()
     .append('g')
-    .attr('transform', d => `translate(${d.y}, ${d.x})`);
-  
-  nodes.append('rect')
-    .attr('x', -60)
-    .attr('y', -15)
-    .attr('width', 120)
-    .attr('height', 30)
-    .attr('fill', '#fee8e8')
-    .attr('stroke', '#b2a2a2')
-    .attr('rx', 5);
-  
+    .attr('class', 'node')
+    .attr('transform', d => `translate(${d.y}, ${d.x})`)
+    .on('click', (event, d) => {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else if (d._children) {
+        d.children = d._children;
+        d._children = null;
+      }
+      update();
+    });
+
+  // Draw shapes based on depth with status border
+  nodes.each(function(d) {
+    const style = getStyleForDepth(d.depth, maxDepth);
+    const defaultStroke = darkenColor(style.fill);
+    const statusColor = getStatusColor(d.data.status);
+    const statusStroke = d.data.status ? statusColor.stroke : null;
+    
+    drawShape(d3.select(this), style.shape, NODE_WIDTH, NODE_HEIGHT, style.fill, defaultStroke, statusStroke);
+  });
+
+  // Status indicator circle (top-left corner)
+  nodes.filter(d => d.data.status)
+    .append('circle')
+    .attr('class', 'status-indicator')
+    .attr('cx', -NODE_WIDTH / 2 + 12)
+    .attr('cy', -NODE_HEIGHT / 2 + 12)
+    .attr('r', 7)
+    .attr('fill', d => getStatusColor(d.data.status).fill)
+    .attr('stroke', d => getStatusColor(d.data.status).stroke);
+
+  // Node labels (name)
   nodes.append('text')
+    .attr('class', 'node-label')
     .attr('text-anchor', 'middle')
-    .attr('dy', '0.35em')
-    .attr('font-size', '10px')
+    .attr('dy', d => d.data.partNumber ? '-0.2em' : '0.35em')
+    .attr('font-size', d => getFontSize(d.depth, maxDepth) + 'px')
     .text(d => {
       const name = d.data.name;
-      return name.length > 18 ? name.substring(0, 16) + '...' : name;
+      const maxLen = Math.max(14, 20 - d.depth * 2);
+      return name.length > maxLen ? name.substring(0, maxLen - 2) + '...' : name;
     });
+
+  // Part number (second line)
+  nodes.filter(d => d.data.partNumber)
+    .append('text')
+    .attr('class', 'node-pn')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '1em')
+    .attr('font-size', '9px')
+    .text(d => {
+      const pn = d.data.partNumber;
+      const display = pn.length > 24 ? pn.substring(0, 22) + '...' : pn;
+      return `(${display})`;
+    });
+
+  // Collapse/expand indicator
+  nodes.filter(d => d._children || d.children)
+    .append('circle')
+    .attr('class', 'collapse-indicator')
+    .attr('cx', NODE_WIDTH / 2 - 10)
+    .attr('cy', -NODE_HEIGHT / 2 + 10)
+    .attr('r', 8);
+
+  nodes.filter(d => d._children || d.children)
+    .append('text')
+    .attr('class', 'toggle-icon')
+    .attr('x', NODE_WIDTH / 2 - 10)
+    .attr('y', -NODE_HEIGHT / 2 + 10)
+    .attr('text-anchor', 'middle')
+    .attr('dy', '0.35em')
+    .text(d => d._children ? '+' : '−');
 }
 
 // ==================================================
-// MAIN LOAD FUNCTION
+// INITIALIZATION
 // ==================================================
-async function loadData() {
-  const parsedDataEl = document.getElementById('parsedData');
-  const hierarchyEl = document.getElementById('hierarchyJson');
-  
-  // Step 1 & 2: Fetch
-  const csvText = await testFetch();
-  if (!csvText) return;
-  
-  // Step 3: Parse
-  const { headers, data } = parseCSV(csvText);
-  
-  if (data.length === 0) {
-    parsedDataEl.innerHTML = '<p class="error">No data rows found in CSV</p>';
-    return;
+document.getElementById('fileSelect').addEventListener('change', (e) => {
+  if (e.target.value) {
+    renderTree(e.target.value);
   }
-  
-  // Show as table
-  let tableHtml = '<table><tr>';
-  headers.forEach(h => tableHtml += `<th>${h}</th>`);
-  tableHtml += '</tr>';
-  
-  data.slice(0, 20).forEach(row => {
-    tableHtml += '<tr>';
-    headers.forEach(h => tableHtml += `<td>${row[h] || ''}</td>`);
-    tableHtml += '</tr>';
-  });
-  
-  if (data.length > 20) {
-    tableHtml += `<tr><td colspan="${headers.length}">... and ${data.length - 20} more rows</td></tr>`;
-  }
-  tableHtml += '</table>';
-  
-  parsedDataEl.innerHTML = tableHtml;
-  
-  // Step 4: Build hierarchy
-  const hierarchy = csvToHierarchy(data);
-  hierarchyEl.textContent = JSON.stringify(hierarchy, null, 2);
-  
-  // Step 5: Render tree
-  renderTree(hierarchy);
-}
+});
 
-// Auto-load on page load
-// loadData();
+// Load all sheets on page load
+loadAllSheets();
+
 </script>
 
 </body>
