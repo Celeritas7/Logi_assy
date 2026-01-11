@@ -548,6 +548,7 @@ function parseCSVLine(line) {
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
+  const childFasteners = new Map(); // Store fastener info per child for orphan arrows
   
   // First pass: Create all nodes and collect info
   csvData.forEach(row => {
@@ -569,6 +570,14 @@ function csvToDAG(csvData) {
       });
     }
     
+    // Store fastener info for this child
+    if (row.Fastener) {
+      childFasteners.set(childName, {
+        fastener: row.Fastener,
+        fastenerQty: parseInt(row.Fastener_Qty) || 0
+      });
+    }
+    
     // Parse parents (semicolon separated)
     const parentStr = row.Parent || '';
     const parents = parentStr.split(';').map(p => p.trim()).filter(p => p);
@@ -578,10 +587,12 @@ function csvToDAG(csvData) {
       
       // Skip ROOT and NONE/ORPHAN
       if (parentUpper === 'ROOT') {
+        // This is the root node, no parent link needed
         return;
       }
       
       if (parentUpper === 'NONE' || parentUpper === 'ORPHAN') {
+        // Mark as orphan
         nodes.get(childName).isOrphan = true;
         return;
       }
@@ -603,11 +614,12 @@ function csvToDAG(csvData) {
         });
       }
       
-      // Link: from parent TO child (LEFT to RIGHT flow)
-      // source = parent (left), target = child (right)
+      // Add link (child -> parent means arrow points from child to parent)
+      // But we want arrow from parent to child visually
+      // So source is the parent (in terms of data) and target is the child
       links.push({
-        source: parentName,  // Parent node (left)
-        target: childName,   // Child node (right)
+        source: childName,  // The child node
+        target: parentName, // The parent node
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
@@ -682,6 +694,7 @@ function csvToDAG(csvData) {
   // PASS 2: Calculate depths for orphans based on their children
   nodes.forEach(node => {
     if (node.isOrphan && node.depth === -1) {
+      // Find minimum depth of children
       let minChildDepth = Infinity;
       
       node.children.forEach(childName => {
@@ -695,6 +708,7 @@ function csvToDAG(csvData) {
         node.depth = minChildDepth - 1;
         if (node.depth < 0) node.depth = 0;
       } else {
+        // Orphan with no children - place at depth 1
         node.depth = 1;
       }
       
@@ -705,6 +719,7 @@ function csvToDAG(csvData) {
   // PASS 3: Handle any remaining unvisited nodes
   nodes.forEach(node => {
     if (node.depth === -1) {
+      // Try to calculate from children
       let minChildDepth = Infinity;
       node.children.forEach(childName => {
         const childNode = nodes.get(childName);
@@ -744,7 +759,7 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
   // Root is always visible
   if (node.parents.length === 0 && !node.isOrphan) return true;
   
-  // Orphans are always visible
+  // Orphans are always visible (they have no upstream to collapse)
   if (node.isOrphan && node.parents.length === 0) return true;
   
   // Check if ANY parent path leads to a visible, non-collapsed ancestor
@@ -777,9 +792,7 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
 }
 
 function isLinkFromCollapsedParent(link, collapsedNodes) {
-  // Link goes from source (parent) to target (child)
-  // If source (parent) is collapsed, show as dotted
-  return collapsedNodes.has(link.source);
+  return collapsedNodes.has(link.target);
 }
 
 // ==================================================
@@ -1072,12 +1085,12 @@ function renderGraph(tabName) {
   
   svg.attr('width', width).attr('height', height);
   
-  // Position nodes: ROOT on LEFT (depth 0 = leftmost), children to the RIGHT
+  // Position nodes
   const nodePositions = new Map();
   
-  Object.keys(nodesByDepth).sort((a, b) => a - b).forEach(depth => {
+  Object.keys(nodesByDepth).sort((a, b) => b - a).forEach(depth => {
     const depthNodes = nodesByDepth[depth];
-    const x = margin.left + depth * 250;  // depth 0 = left, higher depth = more right
+    const x = margin.left + (maxDepth - depth) * 250;
     const totalHeight = depthNodes.length * 70;
     const startY = (height - totalHeight) / 2 + 35;
     
@@ -1122,10 +1135,10 @@ function renderGraph(tabName) {
     .x(d => d.x)
     .y(d => d.y);
   
-  // Draw links (from parent on left to child on right)
+  // Draw links
   visibleLinks.forEach(link => {
-    const sourcePos = nodePositions.get(link.source); // Parent (left)
-    const targetPos = nodePositions.get(link.target); // Child (right)
+    const sourcePos = nodePositions.get(link.source);
+    const targetPos = nodePositions.get(link.target);
     
     if (!sourcePos || !targetPos) return;
     
@@ -1133,12 +1146,11 @@ function renderGraph(tabName) {
     const fastenerColor = getFastenerColor(link.fastener);
     const baseColor = fastenerColor || '#888';
     
-    // Arrow goes from source (parent, left) to target (child, right)
     g.append('path')
       .attr('class', 'link')
       .attr('d', linkGenerator({
-        source: { x: sourcePos.x + NODE_WIDTH / 2, y: sourcePos.y },  // Right edge of parent
-        target: { x: targetPos.x - NODE_WIDTH / 2, y: targetPos.y }   // Left edge of child
+        source: { x: sourcePos.x + NODE_WIDTH / 2, y: sourcePos.y },
+        target: { x: targetPos.x - NODE_WIDTH / 2, y: targetPos.y }
       }))
       .attr('stroke', baseColor)
       .attr('stroke-width', isCollapsed ? 1.5 : 2)
