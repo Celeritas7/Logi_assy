@@ -260,43 +260,25 @@
       <svg class="legend-shape" viewBox="0 0 24 16">
         <rect x="1" y="1" width="22" height="14" fill="#fee8e8" stroke="#b2a2a2" stroke-width="1.5" rx="3"/>
       </svg>
-      <span>Minor</span>
+      <span>Minor Assy</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
-        <polygon points="12,1 22,5 19,15 5,15 2,5" fill="#fce4d6" stroke="#c9a88c" stroke-width="1.5"/>
+        <rect x="1" y="1" width="22" height="14" fill="#fcdaf7" stroke="#b098ac" stroke-width="1.5" rx="5"/>
       </svg>
-      <span>L4</span>
-    </div>
-    <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 24 16">
-        <rect x="1" y="1" width="22" height="14" fill="#fff2cc" stroke="#d4b85c" stroke-width="1.5" rx="7"/>
-      </svg>
-      <span>L3</span>
-    </div>
-    <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 24 16">
-        <polygon points="5,1 21,1 19,15 3,15" fill="#d9ead3" stroke="#8faa82" stroke-width="1.5"/>
-      </svg>
-      <span>L2</span>
-    </div>
-    <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 24 16">
-        <polygon points="4,1 20,1 24,8 20,15 4,15 0,8" fill="#d0e0e3" stroke="#8fadb2" stroke-width="1.5"/>
-      </svg>
-      <span>Sub</span>
+      <span>Sub Assy</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
         <ellipse cx="12" cy="8" rx="11" ry="7" fill="#f3e9cf" stroke="#aaa391" stroke-width="1.5"/>
       </svg>
-      <span>Major</span>
+      <span>Major Assy</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
-        <polygon points="6,1 18,1 23,4 23,12 18,15 6,15 1,12 1,4" fill="#b6d7a8" stroke="#7f9675" stroke-width="1.5"/>
+        <polygon points="5,1 19,1 23,8 19,15 5,15 1,8" fill="#b6d7a8" stroke="#7f9675" stroke-width="1.5"/>
       </svg>
-      <span>Final</span>
+      <span>Final Assy</span>
     </div>
   </div>
 
@@ -458,17 +440,13 @@ function getFastenerColor(fastener) {
 
 // ==================================================
 // STYLE CONFIGURATION (depth 0 = leftmost/parts, maxDepth = rightmost/final)
-// 8 levels: Parts → Minor → Sub-sub-sub-sub → Sub-sub-sub → Sub-sub → Sub → Major → Final
 // ==================================================
 const STYLE_SCALE = [
-  { shape: "rectangle",         fill: "#f5f5f5" },  // 0 - Parts (leftmost)
-  { shape: "rounded_rectangle", fill: "#fee8e8" },  // 1 - Minor Assy
-  { shape: "pentagon",          fill: "#fce4d6" },  // 2 - Sub-sub-sub-sub Assy
-  { shape: "stadium",           fill: "#fff2cc" },  // 3 - Sub-sub-sub Assy
-  { shape: "parallelogram",     fill: "#d9ead3" },  // 4 - Sub-sub Assy
-  { shape: "hexagon",           fill: "#d0e0e3" },  // 5 - Sub Assy
-  { shape: "ellipse",           fill: "#f3e9cf" },  // 6 - Major Assy
-  { shape: "octagon",           fill: "#b6d7a8" },  // 7 - Final Assy (rightmost)
+  { shape: "rectangle",               fill: "#f5f5f5" },  // depth 0 - Parts (leftmost)
+  { shape: "rounded_rectangle",       fill: "#fee8e8" },  // Minor assemblies
+  { shape: "rounded_rectangle_strong",fill: "#fcdaf7" },  // Sub assemblies
+  { shape: "ellipse",                 fill: "#f3e9cf" },  // Major assemblies
+  { shape: "hexagon",                 fill: "#b6d7a8" },  // Final assembly (rightmost)
 ];
 
 const FONT_SIZES = [11, 12, 13, 14, 15, 16];
@@ -1080,9 +1058,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('rx', 10);
     }
   }
-  else if (shapeType === "stadium") {
-    // Stadium/Pill shape - fully rounded ends
-    const radius = halfH;
+  else if (shapeType === "rounded_rectangle_strong") {
     selection.insert('rect', ':first-child')
       .attr('class', 'node-shape')
       .attr('x', -halfW)
@@ -1093,8 +1069,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
       .attr('stroke-dasharray', dashArray)
-      .attr('rx', radius)
-      .attr('ry', radius);
+      .attr('rx', 15);
     
     if (isMultiParent) {
       selection.insert('rect', ':first-child')
@@ -1106,79 +1081,28 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('stroke', '#e74c3c')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
-        .attr('rx', radius + 4)
-        .attr('ry', radius + 4);
+        .attr('rx', 17);
     }
   }
-  else if (shapeType === "parallelogram") {
-    // Parallelogram shape
-    const skew = 15;
-    const points = [
-      [-halfW + skew, -halfH],
-      [halfW + skew, -halfH],
-      [halfW - skew, halfH],
-      [-halfW - skew, halfH]
-    ].map(p => p.join(',')).join(' ');
-
-    selection.insert('polygon', ':first-child')
+  else if (shapeType === "ellipse") {
+    selection.insert('ellipse', ':first-child')
       .attr('class', 'node-shape')
-      .attr('points', points)
+      .attr('cx', 0)
+      .attr('cy', 0)
+      .attr('rx', halfW)
+      .attr('ry', halfH)
       .attr('fill', fill)
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
       .attr('stroke-dasharray', dashArray);
     
     if (isMultiParent) {
-      const outerPoints = [
-        [-halfW + skew - 2, -halfH - 4],
-        [halfW + skew + 4, -halfH - 4],
-        [halfW - skew + 2, halfH + 4],
-        [-halfW - skew - 4, halfH + 4]
-      ].map(p => p.join(',')).join(' ');
-      
-      selection.insert('polygon', ':first-child')
+      selection.insert('ellipse', ':first-child')
         .attr('class', 'multi-parent-indicator')
-        .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
-    }
-  }
-  else if (shapeType === "pentagon") {
-    // Pentagon shape (5 sides)
-    const angle = (2 * Math.PI) / 5;
-    const startAngle = -Math.PI / 2; // Start from top
-    const rx = halfW * 0.9;
-    const ry = halfH * 0.95;
-    
-    const points = [];
-    for (let i = 0; i < 5; i++) {
-      const x = rx * Math.cos(startAngle + i * angle);
-      const y = ry * Math.sin(startAngle + i * angle);
-      points.push(`${x},${y}`);
-    }
-
-    selection.insert('polygon', ':first-child')
-      .attr('class', 'node-shape')
-      .attr('points', points.join(' '))
-      .attr('fill', fill)
-      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
-      .attr('stroke-width', strokeWidth)
-      .attr('stroke-dasharray', dashArray);
-    
-    if (isMultiParent) {
-      const outerRx = rx + 4;
-      const outerRy = ry + 4;
-      const outerPoints = [];
-      for (let i = 0; i < 5; i++) {
-        const x = outerRx * Math.cos(startAngle + i * angle);
-        const y = outerRy * Math.sin(startAngle + i * angle);
-        outerPoints.push(`${x},${y}`);
-      }
-      
-      selection.insert('polygon', ':first-child')
-        .attr('class', 'multi-parent-indicator')
-        .attr('points', outerPoints.join(' '))
+        .attr('cx', 0)
+        .attr('cy', 0)
+        .attr('rx', halfW + 4)
+        .attr('ry', halfH + 4)
         .attr('stroke', '#e74c3c')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
@@ -1210,73 +1134,6 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         [halfW - 10, halfH + 4],
         [-halfW + 10, halfH + 4],
         [-halfW - 4, 0]
-      ].map(p => p.join(',')).join(' ');
-      
-      selection.insert('polygon', ':first-child')
-        .attr('class', 'multi-parent-indicator')
-        .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
-    }
-  }
-  else if (shapeType === "ellipse") {
-    selection.insert('ellipse', ':first-child')
-      .attr('class', 'node-shape')
-      .attr('cx', 0)
-      .attr('cy', 0)
-      .attr('rx', halfW)
-      .attr('ry', halfH)
-      .attr('fill', fill)
-      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
-      .attr('stroke-width', strokeWidth)
-      .attr('stroke-dasharray', dashArray);
-    
-    if (isMultiParent) {
-      selection.insert('ellipse', ':first-child')
-        .attr('class', 'multi-parent-indicator')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('rx', halfW + 4)
-        .attr('ry', halfH + 4)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
-    }
-  }
-  else if (shapeType === "octagon") {
-    // Octagon shape (stop sign)
-    const cut = Math.min(halfW, halfH) * 0.4;
-    const points = [
-      [-halfW + cut, -halfH],
-      [halfW - cut, -halfH],
-      [halfW, -halfH + cut],
-      [halfW, halfH - cut],
-      [halfW - cut, halfH],
-      [-halfW + cut, halfH],
-      [-halfW, halfH - cut],
-      [-halfW, -halfH + cut]
-    ].map(p => p.join(',')).join(' ');
-
-    selection.insert('polygon', ':first-child')
-      .attr('class', 'node-shape')
-      .attr('points', points)
-      .attr('fill', fill)
-      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
-      .attr('stroke-width', strokeWidth)
-      .attr('stroke-dasharray', dashArray);
-    
-    if (isMultiParent) {
-      const outerCut = cut + 2;
-      const outerPoints = [
-        [-halfW - 2 + outerCut, -halfH - 4],
-        [halfW + 2 - outerCut, -halfH - 4],
-        [halfW + 4, -halfH - 2 + outerCut],
-        [halfW + 4, halfH + 2 - outerCut],
-        [halfW + 2 - outerCut, halfH + 4],
-        [-halfW - 2 + outerCut, halfH + 4],
-        [-halfW - 4, halfH + 2 - outerCut],
-        [-halfW - 4, -halfH - 2 + outerCut]
       ].map(p => p.join(',')).join(' ');
       
       selection.insert('polygon', ':first-child')
