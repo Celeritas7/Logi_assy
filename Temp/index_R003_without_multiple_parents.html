@@ -412,7 +412,8 @@ const NODE_HEIGHT = 50;
 // GLOBAL STATE
 // ==================================================
 let loadedData = {};
-let currentGraphData = null;
+let currentRoot = null;
+let maxDepth = 0;
 
 // ==================================================
 // UTILITY FUNCTIONS
@@ -499,127 +500,71 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO DAG (Directed Acyclic Graph) WITH SEMICOLON SUPPORT
+// CSV TO HIERARCHY CONVERSION (No Seq Required)
 // ==================================================
-function csvToDAG(csvData) {
-  const nodes = new Map(); // name -> node data
-  const links = []; // { source, target, fastener, fastenerQty }
+function csvToHierarchy(csvData) {
+  // Filter rows that have Child column
+  const validRows = csvData.filter(row => row.Child);
   
-  // First pass: Create all nodes
-  csvData.forEach(row => {
-    const childName = row.Child.trim();
-    
-    if (!nodes.has(childName)) {
-      nodes.set(childName, {
-        name: childName,
-        partNumber: row.Part_Number || row.Part_Num || '',
-        status: row.Status || '',
-        qty: parseInt(row.Qty) || 1,
-        depth: -1, // Will calculate later
-        parents: [],
-        children: []
-      });
-    }
-    
-    // Parse parents (semicolon separated)
-    const parentStr = row.Parent || '';
-    const parents = parentStr.split(';').map(p => p.trim()).filter(p => p);
-    
-    parents.forEach(parentName => {
-      // Create parent node if doesn't exist
-      if (parentName.toUpperCase() !== 'ROOT' && !nodes.has(parentName)) {
-        nodes.set(parentName, {
-          name: parentName,
-          partNumber: '',
-          status: '',
-          qty: 1,
-          depth: -1,
-          parents: [],
-          children: []
-        });
-      }
-      
-      // Add link
-      if (parentName.toUpperCase() !== 'ROOT') {
-        links.push({
-          source: childName,
-          target: parentName,
-          fastener: row.Fastener || '',
-          fastenerQty: parseInt(row.Fastener_Qty) || 0
-        });
-        
-        // Track relationships
-        nodes.get(childName).parents.push(parentName);
-        if (nodes.has(parentName)) {
-          nodes.get(parentName).children.push(childName);
-        }
-      }
-    });
-  });
+  if (validRows.length === 0) {
+    console.error('No valid rows found');
+    return null;
+  }
   
-  // Find root node (has Parent = ROOT)
-  let rootName = null;
-  csvData.forEach(row => {
-    const parentStr = row.Parent || '';
-    const parents = parentStr.split(';').map(p => p.trim().toUpperCase());
-    if (parents.includes('ROOT')) {
-      rootName = row.Child.trim();
-    }
-  });
+  // Find root (Parent = ROOT or empty Parent for the top-level item)
+  let rootRow = validRows.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
   
-  // If no explicit ROOT, find nodes with no parents
-  if (!rootName) {
-    for (const [name, node] of nodes) {
-      if (node.parents.length === 0) {
-        rootName = name;
+  // If no explicit ROOT, try to find nodes that aren't children of anything
+  if (!rootRow) {
+    const allChildren = new Set(validRows.map(r => r.Child));
+    const allParents = new Set(validRows.map(r => r.Parent).filter(p => p));
+    
+    // Find parents that aren't listed as children
+    for (const row of validRows) {
+      if (row.Parent && !allChildren.has(row.Parent)) {
+        // This parent doesn't exist as a child, so it might be root
+        rootRow = { Child: row.Parent, Parent: 'ROOT' };
         break;
       }
     }
   }
   
-  if (!rootName) {
-    console.error('No root node found');
+  if (!rootRow) {
+    console.error('No ROOT found in CSV');
     return null;
   }
   
-  // Calculate depths using BFS from root
-  const queue = [{ name: rootName, depth: 0 }];
-  const visited = new Set();
-  let maxDepth = 0;
+  const rootName = rootRow.Child;
   
-  while (queue.length > 0) {
-    const { name, depth } = queue.shift();
+  // Build lookup map: parent -> children
+  const childrenMap = {};
+  validRows.forEach(row => {
+    const parent = row.Parent;
+    if (!parent) return;
     
-    if (visited.has(name)) continue;
-    visited.add(name);
-    
-    const node = nodes.get(name);
-    if (node) {
-      node.depth = Math.max(node.depth, depth);
-      maxDepth = Math.max(maxDepth, depth);
-      
-      // Add children to queue
-      node.children.forEach(childName => {
-        if (!visited.has(childName)) {
-          queue.push({ name: childName, depth: depth + 1 });
-        }
-      });
+    if (!childrenMap[parent]) {
+      childrenMap[parent] = [];
     }
-  }
-  
-  // Set depth for any unvisited nodes (disconnected)
-  nodes.forEach(node => {
-    if (node.depth === -1) {
-      node.depth = maxDepth + 1;
-    }
+    childrenMap[parent].push(row);
   });
   
-  return {
-    nodes: Array.from(nodes.values()),
-    links: links,
-    rootName: rootName,
-    maxDepth: maxDepth
-  };
+  // Recursive build
+  function buildNode(name, rowData) {
+    const children = childrenMap[name] || [];
+    const childNodes = children.map(childRow => buildNode(childRow.Child, childRow));
+    
+    return {
+      name: name,
+      partNumber: rowData ? rowData.Part_Number || '' : '',
+      fastener: rowData ? rowData.Fastener || '' : '',
+      fastenerQty: rowData ? parseInt(rowData.Fastener_Qty) || 0 : 0,
+      status: rowData ? rowData.Status || '' : '',
+      qty: rowData ? parseInt(rowData.Qty) || 1 : 1,
+      children: childNodes.length > 0 ? childNodes : null
+    };
+  }
+  
+  return buildNode(rootName, rootRow);
 }
 
 // ==================================================
@@ -634,9 +579,9 @@ async function loadSheetData(tabConfig) {
     
     const csvText = await response.text();
     const csvData = parseCSV(csvText);
-    const graphData = csvToDAG(csvData);
+    const hierarchy = csvToHierarchy(csvData);
     
-    return graphData;
+    return hierarchy;
   } catch (error) {
     console.error(`Error loading ${tabConfig.name}:`, error);
     throw error;
@@ -650,8 +595,8 @@ async function loadAllSheets() {
   
   const results = await Promise.allSettled(
     SHEET_TABS.map(async (tab) => {
-      const graphData = await loadSheetData(tab);
-      return { tab, graphData };
+      const hierarchy = await loadSheetData(tab);
+      return { tab, hierarchy };
     })
   );
   
@@ -661,14 +606,14 @@ async function loadAllSheets() {
   results.forEach((result, index) => {
     const tab = SHEET_TABS[index];
     
-    if (result.status === 'fulfilled' && result.value.graphData) {
-      const { graphData } = result.value;
-      loadedData[tab.name] = graphData;
+    if (result.status === 'fulfilled' && result.value.hierarchy) {
+      const { hierarchy } = result.value;
+      loadedData[tab.name] = hierarchy;
       
       const option = document.createElement('option');
       option.value = tab.name;
       // Use root node name as display text
-      option.textContent = graphData.rootName || tab.name;
+      option.textContent = hierarchy.name || tab.name;
       select.appendChild(option);
       
       if (!firstValidTab) firstValidTab = tab.name;
@@ -680,7 +625,7 @@ async function loadAllSheets() {
   if (firstValidTab) {
     setStatus('');
     select.value = firstValidTab;
-    renderGraph(firstValidTab);
+    renderTree(firstValidTab);
   } else {
     setStatus('No valid data found. Check Google Sheet permissions.', 'error');
     document.getElementById('treeContainer').innerHTML = 
@@ -694,12 +639,23 @@ function refreshData() {
 }
 
 // ==================================================
+// CALCULATE MAX DEPTH
+// ==================================================
+function getMaxDepth(node, depth = 0) {
+  if (!node.children || node.children.length === 0) {
+    return depth;
+  }
+  return Math.max(...node.children.map(child => getMaxDepth(child, depth + 1)));
+}
+
+// ==================================================
 // DRAW SVG SHAPE
 // ==================================================
 function drawShape(selection, shapeType, width, height, fill, stroke, statusStroke) {
   const halfW = width / 2;
   const halfH = height / 2;
   
+  // Use status stroke if available, otherwise use default stroke
   const finalStroke = statusStroke || stroke;
   const strokeWidth = statusStroke ? 3 : 2;
 
@@ -772,168 +728,185 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
 }
 
 // ==================================================
-// RENDER DAG (Directed Acyclic Graph)
+// RENDER TREE
 // ==================================================
-function renderGraph(tabName) {
-  const container = document.getElementById('treeContainer');
-  container.innerHTML = '<svg id="treeSvg"></svg>';
-  
-  const graphData = loadedData[tabName];
-  if (!graphData) {
+function renderTree(tabName) {
+  const svg = d3.select('#treeSvg');
+  svg.selectAll('*').remove();
+
+  const hierarchyData = loadedData[tabName];
+  if (!hierarchyData) {
     console.error('No data for:', tabName);
-    container.innerHTML = '<div class="message error">No data available for this assembly.</div>';
+    document.getElementById('treeContainer').innerHTML = 
+      '<div class="message error">No data available for this assembly.</div>';
     return;
   }
 
-  currentGraphData = graphData;
-  
+  // Reset container
+  document.getElementById('treeContainer').innerHTML = '<svg id="treeSvg"></svg>';
+  const newSvg = d3.select('#treeSvg');
+
+  currentRoot = d3.hierarchy(hierarchyData);
+  maxDepth = getMaxDepth(hierarchyData);
+
+  // Initialize: expand first two levels, collapse rest
+  currentRoot.descendants().forEach((d) => {
+    if (d.depth > 1 && d.children) {
+      d._children = d.children;
+      d.children = null;
+    }
+  });
+
+  update();
+}
+
+function update() {
   const svg = d3.select('#treeSvg');
-  const { nodes, links, rootName, maxDepth } = graphData;
+  svg.selectAll('*').remove();
+
+  // Count visible nodes for sizing
+  const allNodes = currentRoot.descendants();
+  const visibleCount = allNodes.length;
   
-  // Calculate layout dimensions
   const margin = { top: 60, right: 200, bottom: 60, left: 100 };
-  
-  // Group nodes by depth for positioning
-  const nodesByDepth = {};
-  nodes.forEach(node => {
-    if (!nodesByDepth[node.depth]) {
-      nodesByDepth[node.depth] = [];
-    }
-    nodesByDepth[node.depth].push(node);
-  });
-  
-  // Calculate positions
-  const depthCount = maxDepth + 1;
-  const maxNodesInLevel = Math.max(...Object.values(nodesByDepth).map(arr => arr.length));
-  
-  const width = Math.max(1400, depthCount * 280 + margin.left + margin.right);
-  const height = Math.max(800, maxNodesInLevel * 80 + margin.top + margin.bottom);
-  
+  const width = Math.max(1400, (maxDepth + 1) * 300 + margin.left + margin.right);
+  const height = Math.max(800, visibleCount * 60 + margin.top + margin.bottom);
+
   svg.attr('width', width).attr('height', height);
-  
-  // Position nodes
-  const nodePositions = new Map();
-  
-  Object.keys(nodesByDepth).sort((a, b) => b - a).forEach(depth => {
-    const depthNodes = nodesByDepth[depth];
-    const x = margin.left + (maxDepth - depth) * 250;
-    const totalHeight = depthNodes.length * 70;
-    const startY = (height - totalHeight) / 2 + 35;
-    
-    depthNodes.forEach((node, index) => {
-      node.x = x;
-      node.y = startY + index * 70;
-      nodePositions.set(node.name, { x: node.x, y: node.y });
-    });
-  });
-  
+
   const g = svg.append('g')
-    .attr('class', 'main');
-  
-  // Create arrow marker
-  svg.append('defs').append('marker')
-    .attr('id', 'arrowhead')
-    .attr('viewBox', '-0 -5 10 10')
-    .attr('refX', 8)
-    .attr('refY', 0)
-    .attr('orient', 'auto')
-    .attr('markerWidth', 6)
-    .attr('markerHeight', 6)
-    .append('path')
-    .attr('d', 'M 0,-5 L 10,0 L 0,5')
-    .attr('fill', '#888');
-  
-  // Draw links with curves
+    .attr('class', 'main')
+    .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+  // Use D3 tree layout
+  const treeLayout = d3.tree()
+    .size([height - margin.top - margin.bottom, width - margin.left - margin.right - 150])
+    .separation((a, b) => {
+      return (a.parent === b.parent ? 1 : 1.5);
+    });
+
+  treeLayout(currentRoot);
+
+  // Create curved link generator
   const linkGenerator = d3.linkHorizontal()
-    .x(d => d.x)
-    .y(d => d.y);
-  
-  links.forEach(link => {
-    const sourcePos = nodePositions.get(link.source);
-    const targetPos = nodePositions.get(link.target);
-    
-    if (!sourcePos || !targetPos) return;
-    
-    const fastenerColor = getFastenerColor(link.fastener);
-    
-    // Draw curved path
-    const path = g.append('path')
-      .attr('class', 'link')
-      .attr('d', linkGenerator({
-        source: { x: sourcePos.x + NODE_WIDTH / 2, y: sourcePos.y },
-        target: { x: targetPos.x - NODE_WIDTH / 2, y: targetPos.y }
-      }))
-      .attr('stroke', fastenerColor || '#aaa')
-      .attr('stroke-width', fastenerColor ? 2.5 : 1.5)
-      .attr('marker-end', 'url(#arrowhead)');
-    
-    // Draw fastener label
-    if (link.fastener) {
-      const midX = (sourcePos.x + NODE_WIDTH / 2 + targetPos.x - NODE_WIDTH / 2) / 2;
-      const midY = (sourcePos.y + targetPos.y) / 2 - 8;
-      
-      g.append('text')
-        .attr('class', 'link-label')
-        .attr('x', midX)
-        .attr('y', midY)
-        .attr('text-anchor', 'middle')
-        .attr('fill', fastenerColor || '#666')
-        .text(link.fastenerQty ? `${link.fastener} ×${link.fastenerQty}` : link.fastener);
-    }
-  });
-  
+    .x(d => d.y)
+    .y(d => d.x);
+
+  // Draw links
+  g.selectAll('.link')
+    .data(currentRoot.links())
+    .enter()
+    .append('path')
+    .attr('class', 'link')
+    .attr('d', linkGenerator)
+    .attr('stroke', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color || '#aaa';
+    })
+    .attr('stroke-width', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color ? 2.5 : 1.5;
+    });
+
+  // Draw link labels (fastener info)
+  g.selectAll('.link-label')
+    .data(currentRoot.links())
+    .enter()
+    .append('text')
+    .attr('class', 'link-label')
+    .attr('x', d => (d.source.y + d.target.y) / 2)
+    .attr('y', d => (d.source.x + d.target.x) / 2 - 4)
+    .attr('text-anchor', 'middle')
+    .attr('fill', d => {
+      const color = getFastenerColor(d.target.data.fastener);
+      return color || '#666';
+    })
+    .text(d => {
+      const fastener = d.target.data.fastener;
+      const qty = d.target.data.fastenerQty;
+      if (!fastener || fastener === "None" || fastener === "") return "";
+      return qty ? `${fastener} ×${qty}` : fastener;
+    });
+
   // Draw nodes
-  const nodeGroups = g.selectAll('.node')
-    .data(nodes)
+  const nodes = g.selectAll('.node')
+    .data(currentRoot.descendants())
     .enter()
     .append('g')
     .attr('class', 'node')
-    .attr('transform', d => `translate(${d.x}, ${d.y})`);
-  
-  // Draw shapes
-  nodeGroups.each(function(d) {
+    .attr('transform', d => `translate(${d.y}, ${d.x})`)
+    .on('click', (event, d) => {
+      if (d.children) {
+        d._children = d.children;
+        d.children = null;
+      } else if (d._children) {
+        d.children = d._children;
+        d._children = null;
+      }
+      update();
+    });
+
+  // Draw shapes based on depth with status border
+  nodes.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
     const defaultStroke = darkenColor(style.fill);
-    const statusColor = getStatusColor(d.status);
-    const statusStroke = d.status ? statusColor.stroke : null;
+    const statusColor = getStatusColor(d.data.status);
+    const statusStroke = d.data.status ? statusColor.stroke : null;
     
     drawShape(d3.select(this), style.shape, NODE_WIDTH, NODE_HEIGHT, style.fill, defaultStroke, statusStroke);
   });
-  
-  // Status indicator circle
-  nodeGroups.filter(d => d.status)
+
+  // Status indicator circle (top-left corner)
+  nodes.filter(d => d.data.status)
     .append('circle')
     .attr('class', 'status-indicator')
     .attr('cx', -NODE_WIDTH / 2 + 12)
     .attr('cy', -NODE_HEIGHT / 2 + 12)
     .attr('r', 7)
-    .attr('fill', d => getStatusColor(d.status).fill)
-    .attr('stroke', d => getStatusColor(d.status).stroke);
-  
-  // Node labels
-  nodeGroups.append('text')
+    .attr('fill', d => getStatusColor(d.data.status).fill)
+    .attr('stroke', d => getStatusColor(d.data.status).stroke);
+
+  // Node labels (name)
+  nodes.append('text')
     .attr('class', 'node-label')
     .attr('text-anchor', 'middle')
-    .attr('dy', d => d.partNumber ? '-0.2em' : '0.35em')
+    .attr('dy', d => d.data.partNumber ? '-0.2em' : '0.35em')
     .attr('font-size', d => getFontSize(d.depth, maxDepth) + 'px')
     .text(d => {
-      const name = d.name;
-      const maxLen = 18;
+      const name = d.data.name;
+      const maxLen = Math.max(14, 20 - d.depth * 2);
       return name.length > maxLen ? name.substring(0, maxLen - 2) + '...' : name;
     });
-  
-  // Part number
-  nodeGroups.filter(d => d.partNumber)
+
+  // Part number (second line)
+  nodes.filter(d => d.data.partNumber)
     .append('text')
     .attr('class', 'node-pn')
     .attr('text-anchor', 'middle')
     .attr('dy', '1em')
     .attr('font-size', '9px')
     .text(d => {
-      const pn = d.partNumber;
-      const display = pn.length > 22 ? pn.substring(0, 20) + '...' : pn;
+      const pn = d.data.partNumber;
+      const display = pn.length > 24 ? pn.substring(0, 22) + '...' : pn;
       return `(${display})`;
     });
+
+  // Collapse/expand indicator
+  nodes.filter(d => d._children || d.children)
+    .append('circle')
+    .attr('class', 'collapse-indicator')
+    .attr('cx', NODE_WIDTH / 2 - 10)
+    .attr('cy', -NODE_HEIGHT / 2 + 10)
+    .attr('r', 8);
+
+  nodes.filter(d => d._children || d.children)
+    .append('text')
+    .attr('class', 'toggle-icon')
+    .attr('x', NODE_WIDTH / 2 - 10)
+    .attr('y', -NODE_HEIGHT / 2 + 10)
+    .attr('text-anchor', 'middle')
+    .attr('dy', '0.35em')
+    .text(d => d._children ? '+' : '−');
 }
 
 // ==================================================
@@ -941,7 +914,7 @@ function renderGraph(tabName) {
 // ==================================================
 document.getElementById('fileSelect').addEventListener('change', (e) => {
   if (e.target.value) {
-    renderGraph(e.target.value);
+    renderTree(e.target.value);
   }
 });
 
