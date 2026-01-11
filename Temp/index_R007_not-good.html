@@ -254,31 +254,31 @@
       <svg class="legend-shape" viewBox="0 0 24 16">
         <rect x="1" y="1" width="22" height="14" fill="#f5f5f5" stroke="#ababab" stroke-width="1.5" rx="0"/>
       </svg>
-      <span>Part</span>
+      <span>Leaf</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
         <rect x="1" y="1" width="22" height="14" fill="#fee8e8" stroke="#b2a2a2" stroke-width="1.5" rx="3"/>
       </svg>
-      <span>Minor Assy</span>
+      <span>Minor</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
         <rect x="1" y="1" width="22" height="14" fill="#fcdaf7" stroke="#b098ac" stroke-width="1.5" rx="5"/>
       </svg>
-      <span>Sub Assy</span>
+      <span>Mid</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
         <ellipse cx="12" cy="8" rx="11" ry="7" fill="#f3e9cf" stroke="#aaa391" stroke-width="1.5"/>
       </svg>
-      <span>Major Assy</span>
+      <span>Major</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
         <polygon points="5,1 19,1 23,8 19,15 5,15 1,8" fill="#b6d7a8" stroke="#7f9675" stroke-width="1.5"/>
       </svg>
-      <span>Final Assy</span>
+      <span>Final</span>
     </div>
   </div>
 
@@ -292,7 +292,7 @@
         <rect x="2" y="2" width="20" height="12" fill="#fee8e8" stroke="#e74c3c" stroke-width="2" rx="2"/>
         <rect x="4" y="4" width="16" height="8" fill="none" stroke="#e74c3c" stroke-width="1" rx="1"/>
       </svg>
-      <span>Multi-input</span>
+      <span>Multi-parent</span>
     </div>
     <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 24 16">
@@ -439,19 +439,19 @@ function getFastenerColor(fastener) {
 }
 
 // ==================================================
-// STYLE CONFIGURATION (depth 0 = leftmost/parts, maxDepth = rightmost/final)
+// STYLE CONFIGURATION
 // ==================================================
 const STYLE_SCALE = [
-  { shape: "rectangle",               fill: "#f5f5f5" },  // depth 0 - Parts (leftmost)
-  { shape: "rounded_rectangle",       fill: "#fee8e8" },  // Minor assemblies
-  { shape: "rounded_rectangle_strong",fill: "#fcdaf7" },  // Sub assemblies
-  { shape: "ellipse",                 fill: "#f3e9cf" },  // Major assemblies
-  { shape: "hexagon",                 fill: "#b6d7a8" },  // Final assembly (rightmost)
+  { shape: "rectangle",               fill: "#f5f5f5" },
+  { shape: "rounded_rectangle",       fill: "#fee8e8" },
+  { shape: "rounded_rectangle_strong",fill: "#fcdaf7" },
+  { shape: "ellipse",                 fill: "#f3e9cf" },
+  { shape: "hexagon",                 fill: "#b6d7a8" },
 ];
 
 const FONT_SIZES = [11, 12, 13, 14, 15, 16];
 const NODE_WIDTH = 150;
-const NODE_VERTICAL_SPACING = 100;
+const NODE_VERTICAL_SPACING = 100; // Increased from 70
 
 // ==================================================
 // GLOBAL STATE
@@ -474,17 +474,16 @@ function darkenColor(hex, factor = 0.7) {
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
 
-// Style based on depth: 0 = leftmost (parts), maxDepth = rightmost (final)
 function getStyleForDepth(depth, maxDepth) {
   if (maxDepth === 0) return STYLE_SCALE[STYLE_SCALE.length - 1];
-  const normalizedDepth = depth / maxDepth; // 0 = parts, 1 = final
+  const normalizedDepth = 1 - (depth / maxDepth);
   const index = Math.round(normalizedDepth * (STYLE_SCALE.length - 1));
   return STYLE_SCALE[index];
 }
 
 function getFontSize(depth, maxDepth) {
   if (maxDepth === 0) return FONT_SIZES[FONT_SIZES.length - 1];
-  const normalizedDepth = depth / maxDepth;
+  const normalizedDepth = 1 - (depth / maxDepth);
   const index = Math.round(normalizedDepth * (FONT_SIZES.length - 1));
   return FONT_SIZES[index];
 }
@@ -502,7 +501,7 @@ function calculateNodeHeight(name, partNumber) {
   const maxCharsPerLine = 18;
   const nameLines = Math.ceil(name.length / maxCharsPerLine);
   
-  let height = 40;
+  let height = 40; // Base height
   
   if (nameLines === 1) {
     height = 50;
@@ -512,6 +511,7 @@ function calculateNodeHeight(name, partNumber) {
     height = 80;
   }
   
+  // Add small space for part number if exists
   if (partNumber) {
     height += 12;
   }
@@ -519,6 +519,7 @@ function calculateNodeHeight(name, partNumber) {
   return height;
 }
 
+// Split text into lines for display
 function wrapText(text, maxCharsPerLine) {
   const words = text.split(' ');
   const lines = [];
@@ -535,6 +536,7 @@ function wrapText(text, maxCharsPerLine) {
   
   if (currentLine) lines.push(currentLine);
   
+  // Limit to 3 lines max
   if (lines.length > 3) {
     lines.length = 3;
     lines[2] = lines[2].substring(0, maxCharsPerLine - 3) + '...';
@@ -593,16 +595,13 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO DAG - CORRECTED FLOW DIRECTION
-// Child goes INTO Parent (arrow: Child → Parent)
-// FINAL/ROOT marker = rightmost (highest depth)
+// CSV TO DAG WITH ORPHAN SUPPORT
 // ==================================================
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
-  let finalNodeName = null;
   
-  // First pass: Create all nodes and identify relationships
+  // First pass: Create all nodes and collect info
   csvData.forEach(row => {
     const childName = row.Child.trim();
     
@@ -614,37 +613,32 @@ function csvToDAG(csvData) {
         status: row.Status || '',
         qty: parseInt(row.Qty) || 1,
         depth: -1,
-        goesInto: [],      // What this node goes INTO (targets)
-        receivesFrom: [],  // What goes INTO this node (sources)
+        parents: [],
+        children: [],
+        isMultiParent: false,
         isOrphan: false,
-        isFinal: false,
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0,
         height: calculateNodeHeight(childName, partNumber)
       });
     }
     
-    // Parse parent (what this child goes INTO) - semicolon separated
+    // Parse parents (semicolon separated)
     const parentStr = row.Parent || '';
     const parents = parentStr.split(';').map(p => p.trim()).filter(p => p);
     
     parents.forEach(parentName => {
       const parentUpper = parentName.toUpperCase();
       
-      // FINAL or ROOT marker = this node is the final assembly
-      if (parentUpper === 'FINAL' || parentUpper === 'ROOT') {
-        nodes.get(childName).isFinal = true;
-        finalNodeName = childName;
+      if (parentUpper === 'ROOT') {
         return;
       }
       
-      // NONE or ORPHAN = this node has no upstream connection
       if (parentUpper === 'NONE' || parentUpper === 'ORPHAN') {
         nodes.get(childName).isOrphan = true;
         return;
       }
       
-      // Create parent node if doesn't exist
       if (!nodes.has(parentName)) {
         nodes.set(parentName, {
           name: parentName,
@@ -652,66 +646,68 @@ function csvToDAG(csvData) {
           status: '',
           qty: 1,
           depth: -1,
-          goesInto: [],
-          receivesFrom: [],
+          parents: [],
+          children: [],
+          isMultiParent: false,
           isOrphan: false,
-          isFinal: false,
           fastener: '',
           fastenerQty: 0,
           height: calculateNodeHeight(parentName, '')
         });
       }
       
-      // Link: Child → Parent (child goes INTO parent)
-      // Visual: arrow from Child (left) to Parent (right)
       links.push({
-        source: childName,   // Child (left side)
-        target: parentName,  // Parent (right side)
+        source: parentName,
+        target: childName,
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
       
-      // Track relationships
       const childNode = nodes.get(childName);
-      if (!childNode.goesInto.includes(parentName)) {
-        childNode.goesInto.push(parentName);
+      if (!childNode.parents.includes(parentName)) {
+        childNode.parents.push(parentName);
       }
       
       const parentNode = nodes.get(parentName);
-      if (!parentNode.receivesFrom.includes(childName)) {
-        parentNode.receivesFrom.push(childName);
+      if (!parentNode.children.includes(childName)) {
+        parentNode.children.push(childName);
       }
     });
   });
   
-  // Mark nodes that receive from multiple sources
+  // Mark multi-parent nodes
   nodes.forEach(node => {
-    node.isMultiParent = node.receivesFrom.length > 1;
+    node.isMultiParent = node.parents.length > 1;
   });
   
-  // If no explicit FINAL marker, find the node that nothing goes INTO
-  if (!finalNodeName) {
+  // Find root node
+  let rootName = null;
+  csvData.forEach(row => {
+    const parentStr = row.Parent || '';
+    const parents = parentStr.split(';').map(p => p.trim().toUpperCase());
+    if (parents.includes('ROOT')) {
+      rootName = row.Child.trim();
+    }
+  });
+  
+  if (!rootName) {
     for (const [name, node] of nodes) {
-      if (node.goesInto.length === 0 && !node.isOrphan) {
-        finalNodeName = name;
-        node.isFinal = true;
+      if (node.parents.length === 0 && !node.isOrphan) {
+        rootName = name;
         break;
       }
     }
   }
   
-  if (!finalNodeName) {
-    console.error('No final assembly node found');
+  if (!rootName) {
+    console.error('No root node found');
     return null;
   }
   
-  // DEPTH CALCULATION: Start from FINAL (rightmost) and work backwards
-  // Final node = maxDepth, leaf nodes = 0
-  
-  // First, calculate max possible depth using BFS from final going backwards
-  let maxDepth = 0;
-  const queue = [{ name: finalNodeName, depth: 0 }];
+  // PASS 1: Calculate depths using BFS from root
+  const queue = [{ name: rootName, depth: 0 }];
   const visited = new Set();
+  let maxDepth = 0;
   
   while (queue.length > 0) {
     const { name, depth } = queue.shift();
@@ -721,83 +717,66 @@ function csvToDAG(csvData) {
     
     const node = nodes.get(name);
     if (node) {
-      node.depth = depth;
+      node.depth = Math.max(node.depth, depth);
       maxDepth = Math.max(maxDepth, depth);
       
-      // Go to nodes that feed INTO this one
-      node.receivesFrom.forEach(sourceName => {
-        if (!visited.has(sourceName)) {
-          queue.push({ name: sourceName, depth: depth + 1 });
+      node.children.forEach(childName => {
+        if (!visited.has(childName)) {
+          queue.push({ name: childName, depth: depth + 1 });
         }
       });
     }
   }
   
-  // Now reverse the depths so FINAL is at maxDepth (rightmost)
-  nodes.forEach(node => {
-    if (node.depth !== -1) {
-      node.depth = maxDepth - node.depth;
-    }
-  });
-  
-  // Handle orphans: place them one level before what they go INTO
+  // PASS 2: Calculate depths for orphans
   nodes.forEach(node => {
     if (node.isOrphan && node.depth === -1) {
-      let minTargetDepth = Infinity;
+      let minChildDepth = Infinity;
       
-      node.goesInto.forEach(targetName => {
-        const targetNode = nodes.get(targetName);
-        if (targetNode && targetNode.depth !== -1) {
-          minTargetDepth = Math.min(minTargetDepth, targetNode.depth);
+      node.children.forEach(childName => {
+        const childNode = nodes.get(childName);
+        if (childNode && childNode.depth !== -1) {
+          minChildDepth = Math.min(minChildDepth, childNode.depth);
         }
       });
       
-      if (minTargetDepth !== Infinity) {
-        node.depth = minTargetDepth - 1;
+      if (minChildDepth !== Infinity) {
+        node.depth = minChildDepth - 1;
         if (node.depth < 0) node.depth = 0;
       } else {
-        node.depth = 0; // Orphan with no connections goes to leftmost
+        node.depth = 1;
       }
+      
+      maxDepth = Math.max(maxDepth, node.depth);
     }
   });
   
-  // Handle any remaining unvisited nodes
+  // PASS 3: Handle remaining unvisited nodes
   nodes.forEach(node => {
     if (node.depth === -1) {
-      let minTargetDepth = Infinity;
-      node.goesInto.forEach(targetName => {
-        const targetNode = nodes.get(targetName);
-        if (targetNode && targetNode.depth !== -1) {
-          minTargetDepth = Math.min(minTargetDepth, targetNode.depth);
+      let minChildDepth = Infinity;
+      node.children.forEach(childName => {
+        const childNode = nodes.get(childName);
+        if (childNode && childNode.depth !== -1) {
+          minChildDepth = Math.min(minChildDepth, childNode.depth);
         }
       });
       
-      if (minTargetDepth !== Infinity) {
-        node.depth = minTargetDepth - 1;
+      if (minChildDepth !== Infinity) {
+        node.depth = minChildDepth - 1;
         if (node.depth < 0) node.depth = 0;
       } else {
-        node.depth = 0;
+        node.depth = maxDepth + 1;
       }
+      
+      maxDepth = Math.max(maxDepth, node.depth);
     }
   });
   
-  // Recalculate maxDepth after all adjustments
-  maxDepth = 0;
-  nodes.forEach(node => {
-    maxDepth = Math.max(maxDepth, node.depth);
-  });
-  
-  // Convert to output format (rename for compatibility)
-  const outputNodes = Array.from(nodes.values()).map(node => ({
-    ...node,
-    children: node.goesInto,      // What this goes INTO (for collapse logic)
-    parents: node.receivesFrom    // What feeds INTO this (for visibility)
-  }));
-  
   return {
-    nodes: outputNodes,
+    nodes: Array.from(nodes.values()),
     links: links,
-    finalName: finalNodeName,
+    rootName: rootName,
     maxDepth: maxDepth
   };
 }
@@ -810,17 +789,9 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
   const node = nodesMap.get(nodeName);
   
   if (!node) return false;
+  if (node.parents.length === 0 && !node.isOrphan) return true;
+  if (node.isOrphan && node.parents.length === 0) return true;
   
-  // Final assembly is always visible
-  if (node.isFinal) return true;
-  
-  // Orphans with no goesInto are always visible
-  if (node.isOrphan && node.goesInto.length === 0) return true;
-  
-  // Nodes with nothing feeding into them (leaf parts) are always visible
-  if (node.receivesFrom.length === 0 && !node.isFinal) return true;
-  
-  // Check if ANY target path leads to visible final assembly
   function hasVisiblePath(currentName, visited = new Set()) {
     if (visited.has(currentName)) return false;
     visited.add(currentName);
@@ -828,44 +799,23 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
     const current = nodesMap.get(currentName);
     if (!current) return false;
     
-    // If this is final, path is visible
-    if (current.isFinal) return true;
+    if ((current.parents.length === 0 && !current.isOrphan) || 
+        (current.isOrphan && current.parents.length === 0)) {
+      return true;
+    }
     
-    // Check each target (what this goes INTO)
-    for (const targetName of current.goesInto) {
-      // If target is collapsed, check if target itself is visible
-      if (collapsedNodes.has(targetName)) {
-        // Target is collapsed, but we need to check if target is visible
-        const target = nodesMap.get(targetName);
-        if (target && hasVisiblePath(targetName, visited)) {
-          // Target is visible but collapsed, so we're hidden
-          continue;
-        }
-      } else {
-        // Target is not collapsed, check if it has visible path
-        if (hasVisiblePath(targetName, visited)) return true;
-      }
+    for (const parentName of current.parents) {
+      if (collapsedNodes.has(parentName)) continue;
+      if (hasVisiblePath(parentName, visited)) return true;
     }
     
     return false;
   }
   
-  // A node is visible if it's not blocked by a collapsed node
-  // Check if all paths to final are blocked
-  for (const targetName of node.goesInto) {
-    if (!collapsedNodes.has(targetName)) {
-      // At least one direct target is not collapsed
-      return true;
-    }
-  }
-  
-  // All direct targets are collapsed - node is hidden
-  return node.goesInto.length === 0;
+  return hasVisiblePath(nodeName);
 }
 
-function isLinkFromCollapsedSource(link, collapsedNodes) {
-  // Link goes from source (child) to target (parent)
-  // If source is collapsed, show as faded
+function isLinkFromCollapsedParent(link, collapsedNodes) {
   return collapsedNodes.has(link.source);
 }
 
@@ -875,23 +825,28 @@ function isLinkFromCollapsedSource(link, collapsedNodes) {
 function reorderNodesToMinimizeCrossings(nodesByDepth, nodes, links) {
   const nodesMap = new Map(nodes.map(n => [n.name, n]));
   
-  // Sort nodes at each depth by average Y position of their targets
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(b) - parseInt(a)).forEach(depth => {
+  // Sort nodes at each depth by average Y position of their parents/children
+  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
     const depthInt = parseInt(depth);
     const depthNodes = nodesByDepth[depth];
     
-    // Calculate score based on target (goesInto) positions
+    if (depthInt === 0) {
+      // Root level - no reordering needed
+      return;
+    }
+    
+    // Calculate score based on parent positions
     depthNodes.forEach(node => {
-      const targetPositions = [];
-      (node.goesInto || []).forEach(targetName => {
-        const target = nodesMap.get(targetName);
-        if (target && target.y !== undefined) {
-          targetPositions.push(target.y);
+      const parentPositions = [];
+      node.parents.forEach(parentName => {
+        const parent = nodesMap.get(parentName);
+        if (parent && parent.y !== undefined) {
+          parentPositions.push(parent.y);
         }
       });
       
-      if (targetPositions.length > 0) {
-        node.sortScore = targetPositions.reduce((a, b) => a + b, 0) / targetPositions.length;
+      if (parentPositions.length > 0) {
+        node.sortScore = parentPositions.reduce((a, b) => a + b, 0) / parentPositions.length;
       } else {
         node.sortScore = 0;
       }
@@ -949,7 +904,7 @@ async function loadAllSheets() {
       
       const option = document.createElement('option');
       option.value = tab.name;
-      option.textContent = graphData.finalName || tab.name;
+      option.textContent = graphData.rootName || tab.name;
       select.appendChild(option);
       
       if (!firstValidTab) firstValidTab = tab.name;
@@ -985,7 +940,7 @@ function expandAll() {
 function collapseAll() {
   if (currentGraphData) {
     currentGraphData.nodes.forEach(node => {
-      if (node.receivesFrom && node.receivesFrom.length > 0) {
+      if (node.children.length > 0) {
         collapsedNodes.add(node.name);
       }
     });
@@ -1147,13 +1102,17 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
 }
 
 // ==================================================
-// CUSTOM CURVED LINK
+// CUSTOM CURVED LINK WITH VARIED CURVATURE
 // ==================================================
 function createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor = 0.5) {
   const midX = (sourceX + targetX) / 2;
+  const dx = targetX - sourceX;
   const dy = targetY - sourceY;
   
+  // Vary the control point based on vertical distance
   const controlOffset = Math.abs(dy) * curveFactor;
+  
+  // Create path with quadratic bezier curve
   const controlX = midX;
   const controlY = sourceY + (dy > 0 ? controlOffset : -controlOffset) * 0.3;
   
@@ -1177,7 +1136,7 @@ function renderGraph(tabName) {
   currentGraphData = graphData;
   
   const svg = d3.select('#treeSvg');
-  const { nodes, links, finalName, maxDepth } = graphData;
+  const { nodes, links, rootName, maxDepth } = graphData;
   
   // Filter visible nodes
   const visibleNodes = nodes.filter(node => isNodeVisible(node.name, nodes, collapsedNodes));
@@ -1202,8 +1161,6 @@ function renderGraph(tabName) {
   
   // Initial positioning (needed for reordering)
   const nodePositions = new Map();
-  
-  // First pass: assign initial Y positions
   Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
     const depthNodes = nodesByDepth[depth];
     depthNodes.forEach((node, index) => {
@@ -1211,7 +1168,7 @@ function renderGraph(tabName) {
     });
   });
   
-  // Reorder nodes to minimize crossings (process from right to left)
+  // Reorder nodes to minimize crossings
   nodesByDepth = reorderNodesToMinimizeCrossings(nodesByDepth, visibleNodes, visibleLinks);
   
   const depthCount = maxDepth + 1;
@@ -1222,17 +1179,18 @@ function renderGraph(tabName) {
   
   svg.attr('width', width).attr('height', height);
   
-  // Position nodes: depth 0 = leftmost, maxDepth = rightmost
+  // Position nodes with variable height consideration
   Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
     const depthNodes = nodesByDepth[depth];
     const x = margin.left + parseInt(depth) * 250;
     
+    // Calculate total height needed for this column
     let totalHeight = 0;
     depthNodes.forEach(node => {
-      totalHeight += node.height + 30;
+      totalHeight += node.height + 30; // 30px gap between nodes
     });
     
-    let currentY = (height - totalHeight) / 2 + (depthNodes[0]?.height || 50) / 2;
+    let currentY = (height - totalHeight) / 2 + depthNodes[0].height / 2;
     
     depthNodes.forEach((node) => {
       node.x = x;
@@ -1280,32 +1238,34 @@ function renderGraph(tabName) {
     linksPerTarget.get(link.target).push(link);
   });
   
-  // Draw links (Child → Parent, left to right)
+  // Draw links with varied curvature
   visibleLinks.forEach(link => {
-    const sourcePos = nodePositions.get(link.source); // Child (left)
-    const targetPos = nodePositions.get(link.target); // Parent (right)
+    const sourcePos = nodePositions.get(link.source);
+    const targetPos = nodePositions.get(link.target);
     
     if (!sourcePos || !targetPos) return;
     
-    const isCollapsed = isLinkFromCollapsedSource(link, collapsedNodes);
+    const isCollapsed = isLinkFromCollapsedParent(link, collapsedNodes);
     const fastenerColor = getFastenerColor(link.fastener);
     const baseColor = fastenerColor || '#888';
     
-    // Vary curvature for multiple links to same target
+    // Calculate curve factor based on vertical distance and link index
     const targetLinks = linksPerTarget.get(link.target) || [];
     const linkIndex = targetLinks.indexOf(link);
     const totalLinks = targetLinks.length;
     
+    // Vary curvature for multiple links to same target
     let curveFactor = 0.5;
     if (totalLinks > 1) {
       curveFactor = 0.3 + (linkIndex / totalLinks) * 0.4;
     }
     
-    const sourceX = sourcePos.x + NODE_WIDTH / 2;  // Right edge of child
+    const sourceX = sourcePos.x + NODE_WIDTH / 2;
     const sourceY = sourcePos.y;
-    const targetX = targetPos.x - NODE_WIDTH / 2;  // Left edge of parent
+    const targetX = targetPos.x - NODE_WIDTH / 2;
     const targetY = targetPos.y;
     
+    // Use custom curved link
     const pathD = createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor);
     
     g.append('path')
@@ -1340,7 +1300,7 @@ function renderGraph(tabName) {
     .attr('class', 'node')
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
   
-  // Add tooltip
+  // Add tooltip (native browser title)
   nodeGroups.append('title')
     .text(d => {
       let tooltip = d.name;
@@ -1353,7 +1313,7 @@ function renderGraph(tabName) {
       return tooltip;
     });
   
-  // Draw shapes
+  // Draw shapes with variable height
   nodeGroups.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
     const defaultStroke = darkenColor(style.fill);
@@ -1405,12 +1365,12 @@ function renderGraph(tabName) {
     }
   });
   
-  // Collapse/expand indicator (on nodes that RECEIVE from others)
-  const nodesWithInputs = nodeGroups.filter(d => d.receivesFrom && d.receivesFrom.length > 0);
+  // Collapse/expand indicator
+  const nodesWithChildren = nodeGroups.filter(d => d.children.length > 0);
   
-  nodesWithInputs.append('circle')
+  nodesWithChildren.append('circle')
     .attr('class', 'collapse-indicator')
-    .attr('cx', -NODE_WIDTH / 2 + 10)
+    .attr('cx', NODE_WIDTH / 2 - 10)
     .attr('cy', d => -d.height / 2 + 10)
     .attr('r', 10)
     .on('click', function(event, d) {
@@ -1418,9 +1378,9 @@ function renderGraph(tabName) {
       toggleCollapse(d.name);
     });
   
-  nodesWithInputs.append('text')
+  nodesWithChildren.append('text')
     .attr('class', 'toggle-icon')
-    .attr('x', -NODE_WIDTH / 2 + 10)
+    .attr('x', NODE_WIDTH / 2 - 10)
     .attr('y', d => -d.height / 2 + 10)
     .attr('text-anchor', 'middle')
     .attr('dy', '0.35em')

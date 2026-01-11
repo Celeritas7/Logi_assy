@@ -1,0 +1,47 @@
+Child,Parent,Part_Number,Qty,Fastener,Fastener_Qty,Status,Notes
+# Individual parts and orphans first
+Pillar LH holder plate,None,,,CBE8-35,,,
+Pillar RH holder plate,None,,,CBE8-35,,,
+Pillar back holder plate,None,,,CBE8-75,,,
+Logi base assy,Pillar assy,,,,,,
+Pulley mounting plate,None,,,,,,
+Pulley mounting shaft,None,,,,,,
+Pulley,None,,,,,,
+Remove I bolts,None,,,,,,
+Damper mounting plate,None,,,locknut,,,
+Dampers,None,,,Circlip,,,
+stopper block,None,,,,,,
+
+# Sub-assemblies in the middle
+Pillar assy,Damper mounting plate assy,,,,,,
+Damper mounting plate,Damper mounting plate assy,,,,,,
+Dampers,Damper mounting plate assy,,,,,,
+Counterweight,stopper block,,,,,,
+Remove I bolts,Pulley assembly,,,,,,
+Pulley mounting plate,Pulley assembly,,,,,,
+Pulley mounting shaft,Pulley assembly,,,,,,
+Pulley,Pulley assembly,,,,,,
+Damper mounting plate assy,Counterweight assy,,,,,,
+Counterweight,Counterweight assy,,,,,,
+Counterweight assy,Pillar → Base assy,,,,,,
+Pulley assembly,Pillar → Base assy,,,,,,
+
+# FINAL assembly at the END
+Pillar → Base assy,FINAL,,,,,,
+```
+
+---
+
+### Key Rules:
+
+| Position in CSV | Type | Parent Value |
+|-----------------|------|--------------|
+| Top rows | Individual parts / Orphans | `None` |
+| Middle rows | Sub-assemblies | Name of what they go INTO |
+| **Last row** | **FINAL assembly** | `FINAL` or `ROOT` |
+
+---
+
+### Visual Flow (LEFT → RIGHT):
+```
+Parts (leftmost) ──→ Sub-assemblies ──→ FINAL (rightmost)
