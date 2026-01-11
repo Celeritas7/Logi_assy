@@ -1,4 +1,10 @@
-Please generate the updated html file with all google hseet links. Only remove the Seq column logic from it.
+Now next step. Lets have a discussion before that. As you can see I'm trying to set the child with many parents. but im not able to do it with current setup.
+
+image 1-2: I tried ";" sign but it is not generating any result in the tree.
+
+image 3-4: I have generated many rows for that but it duplicates the children.
+
+Can this be managed with the code? either way a block with same name should not exist right?
 
 
 
@@ -9,7 +15,10 @@ Don't generate any code just take input of my next upgrades. Lets discuss before
 2. I want the tree to be like the sun ray shape.
 
 
-Want to launch it on cloud as it can be visble to anyone with the link to check the progress.
+
+Lets have a discussion abour the following points before generating any code,
+1. Current tree layout is spearding across entire page when only one level 
+Download as image but the map is not fitting in it. any option for that?
 
 
 
