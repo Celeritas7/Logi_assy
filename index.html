@@ -221,7 +221,13 @@
     .multi-parent-indicator {
       fill: none;
       stroke-width: 2px;
-      stroke-dasharray: none;
+    }
+
+    /* Orphan indicator */
+    .orphan-indicator {
+      fill: none;
+      stroke-width: 2px;
+      stroke-dasharray: 5,3;
     }
   </style>
 </head>
@@ -288,10 +294,16 @@
       <span>Multi-parent</span>
     </div>
     <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="2" y="2" width="20" height="12" fill="#fee8e8" stroke="#9b59b6" stroke-width="2" stroke-dasharray="3,2" rx="2"/>
+      </svg>
+      <span>Orphan</span>
+    </div>
+    <div class="legend-item">
       <svg class="legend-shape" viewBox="0 0 30 16">
         <line x1="2" y1="8" x2="28" y2="8" stroke="#888" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>
       </svg>
-      <span>Collapsed link</span>
+      <span>Collapsed</span>
     </div>
   </div>
 
@@ -445,7 +457,7 @@ const NODE_HEIGHT = 50;
 // ==================================================
 let loadedData = {};
 let currentGraphData = null;
-let collapsedNodes = new Set(); // Track which nodes are collapsed
+let collapsedNodes = new Set();
 
 // ==================================================
 // UTILITY FUNCTIONS
@@ -531,13 +543,14 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO DAG WITH SEMICOLON SUPPORT
+// CSV TO DAG WITH ORPHAN SUPPORT
 // ==================================================
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
+  const childFasteners = new Map(); // Store fastener info per child for orphan arrows
   
-  // First pass: Create all nodes
+  // First pass: Create all nodes and collect info
   csvData.forEach(row => {
     const childName = row.Child.trim();
     
@@ -550,7 +563,18 @@ function csvToDAG(csvData) {
         depth: -1,
         parents: [],
         children: [],
-        isMultiParent: false
+        isMultiParent: false,
+        isOrphan: false,
+        fastener: row.Fastener || '',
+        fastenerQty: parseInt(row.Fastener_Qty) || 0
+      });
+    }
+    
+    // Store fastener info for this child
+    if (row.Fastener) {
+      childFasteners.set(childName, {
+        fastener: row.Fastener,
+        fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
     }
     
@@ -559,7 +583,22 @@ function csvToDAG(csvData) {
     const parents = parentStr.split(';').map(p => p.trim()).filter(p => p);
     
     parents.forEach(parentName => {
-      if (parentName.toUpperCase() !== 'ROOT' && !nodes.has(parentName)) {
+      const parentUpper = parentName.toUpperCase();
+      
+      // Skip ROOT and NONE/ORPHAN
+      if (parentUpper === 'ROOT') {
+        // This is the root node, no parent link needed
+        return;
+      }
+      
+      if (parentUpper === 'NONE' || parentUpper === 'ORPHAN') {
+        // Mark as orphan
+        nodes.get(childName).isOrphan = true;
+        return;
+      }
+      
+      // Create parent node if doesn't exist
+      if (!nodes.has(parentName)) {
         nodes.set(parentName, {
           name: parentName,
           partNumber: '',
@@ -568,29 +607,32 @@ function csvToDAG(csvData) {
           depth: -1,
           parents: [],
           children: [],
-          isMultiParent: false
+          isMultiParent: false,
+          isOrphan: false,
+          fastener: '',
+          fastenerQty: 0
         });
       }
       
-      if (parentName.toUpperCase() !== 'ROOT') {
-        links.push({
-          source: childName,
-          target: parentName,
-          fastener: row.Fastener || '',
-          fastenerQty: parseInt(row.Fastener_Qty) || 0
-        });
-        
-        const childNode = nodes.get(childName);
-        if (!childNode.parents.includes(parentName)) {
-          childNode.parents.push(parentName);
-        }
-        
-        if (nodes.has(parentName)) {
-          const parentNode = nodes.get(parentName);
-          if (!parentNode.children.includes(childName)) {
-            parentNode.children.push(childName);
-          }
-        }
+      // Add link (child -> parent means arrow points from child to parent)
+      // But we want arrow from parent to child visually
+      // So source is the parent (in terms of data) and target is the child
+      links.push({
+        source: childName,  // The child node
+        target: parentName, // The parent node
+        fastener: row.Fastener || '',
+        fastenerQty: parseInt(row.Fastener_Qty) || 0
+      });
+      
+      // Track relationships
+      const childNode = nodes.get(childName);
+      if (!childNode.parents.includes(parentName)) {
+        childNode.parents.push(parentName);
+      }
+      
+      const parentNode = nodes.get(parentName);
+      if (!parentNode.children.includes(childName)) {
+        parentNode.children.push(childName);
       }
     });
   });
@@ -600,7 +642,7 @@ function csvToDAG(csvData) {
     node.isMultiParent = node.parents.length > 1;
   });
   
-  // Find root node
+  // Find root node (has Parent = ROOT)
   let rootName = null;
   csvData.forEach(row => {
     const parentStr = row.Parent || '';
@@ -610,9 +652,10 @@ function csvToDAG(csvData) {
     }
   });
   
+  // If no explicit ROOT, find nodes with no parents (excluding orphans)
   if (!rootName) {
     for (const [name, node] of nodes) {
-      if (node.parents.length === 0) {
+      if (node.parents.length === 0 && !node.isOrphan) {
         rootName = name;
         break;
       }
@@ -624,7 +667,7 @@ function csvToDAG(csvData) {
     return null;
   }
   
-  // Calculate depths using BFS
+  // PASS 1: Calculate depths using BFS from root
   const queue = [{ name: rootName, depth: 0 }];
   const visited = new Set();
   let maxDepth = 0;
@@ -648,9 +691,51 @@ function csvToDAG(csvData) {
     }
   }
   
+  // PASS 2: Calculate depths for orphans based on their children
+  nodes.forEach(node => {
+    if (node.isOrphan && node.depth === -1) {
+      // Find minimum depth of children
+      let minChildDepth = Infinity;
+      
+      node.children.forEach(childName => {
+        const childNode = nodes.get(childName);
+        if (childNode && childNode.depth !== -1) {
+          minChildDepth = Math.min(minChildDepth, childNode.depth);
+        }
+      });
+      
+      if (minChildDepth !== Infinity) {
+        node.depth = minChildDepth - 1;
+        if (node.depth < 0) node.depth = 0;
+      } else {
+        // Orphan with no children - place at depth 1
+        node.depth = 1;
+      }
+      
+      maxDepth = Math.max(maxDepth, node.depth);
+    }
+  });
+  
+  // PASS 3: Handle any remaining unvisited nodes
   nodes.forEach(node => {
     if (node.depth === -1) {
-      node.depth = maxDepth + 1;
+      // Try to calculate from children
+      let minChildDepth = Infinity;
+      node.children.forEach(childName => {
+        const childNode = nodes.get(childName);
+        if (childNode && childNode.depth !== -1) {
+          minChildDepth = Math.min(minChildDepth, childNode.depth);
+        }
+      });
+      
+      if (minChildDepth !== Infinity) {
+        node.depth = minChildDepth - 1;
+        if (node.depth < 0) node.depth = 0;
+      } else {
+        node.depth = maxDepth + 1;
+      }
+      
+      maxDepth = Math.max(maxDepth, node.depth);
     }
   });
   
@@ -672,7 +757,10 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
   if (!node) return false;
   
   // Root is always visible
-  if (node.parents.length === 0) return true;
+  if (node.parents.length === 0 && !node.isOrphan) return true;
+  
+  // Orphans are always visible (they have no upstream to collapse)
+  if (node.isOrphan && node.parents.length === 0) return true;
   
   // Check if ANY parent path leads to a visible, non-collapsed ancestor
   function hasVisiblePath(currentName, visited = new Set()) {
@@ -682,8 +770,11 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
     const current = nodesMap.get(currentName);
     if (!current) return false;
     
-    // Root node
-    if (current.parents.length === 0) return true;
+    // Root node or orphan with no parents
+    if ((current.parents.length === 0 && !current.isOrphan) || 
+        (current.isOrphan && current.parents.length === 0)) {
+      return true;
+    }
     
     // Check each parent
     for (const parentName of current.parents) {
@@ -700,19 +791,7 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
   return hasVisiblePath(nodeName);
 }
 
-function isLinkVisible(link, nodes, collapsedNodes) {
-  const nodesMap = new Map(nodes.map(n => [n.name, n]));
-  
-  // Both source and target must be visible
-  const sourceVisible = isNodeVisible(link.source, nodes, collapsedNodes);
-  const targetVisible = isNodeVisible(link.target, nodes, collapsedNodes);
-  
-  return sourceVisible && targetVisible;
-}
-
 function isLinkFromCollapsedParent(link, collapsedNodes) {
-  // The link goes from source (child) to target (parent)
-  // If target (parent) is collapsed, show as dotted
   return collapsedNodes.has(link.target);
 }
 
@@ -796,7 +875,6 @@ function expandAll() {
 
 function collapseAll() {
   if (currentGraphData) {
-    // Collapse all nodes that have children
     currentGraphData.nodes.forEach(node => {
       if (node.children.length > 0) {
         collapsedNodes.add(node.name);
@@ -809,14 +887,15 @@ function collapseAll() {
 // ==================================================
 // DRAW SVG SHAPE
 // ==================================================
-function drawShape(selection, shapeType, width, height, fill, stroke, statusStroke, isMultiParent) {
+function drawShape(selection, shapeType, width, height, fill, stroke, statusStroke, isMultiParent, isOrphan) {
   const halfW = width / 2;
   const halfH = height / 2;
   
   const finalStroke = statusStroke || stroke;
-  const strokeWidth = isMultiParent ? 3 : 2;
+  const strokeWidth = (isMultiParent || isOrphan) ? 3 : 2;
+  const dashArray = isOrphan ? '6,3' : 'none';
 
-  selection.selectAll('.node-shape, .multi-parent-indicator').remove();
+  selection.selectAll('.node-shape, .multi-parent-indicator, .orphan-indicator').remove();
 
   if (shapeType === "rectangle") {
     selection.insert('rect', ':first-child')
@@ -826,8 +905,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('width', width)
       .attr('height', height)
       .attr('fill', fill)
-      .attr('stroke', finalStroke)
+      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
+      .attr('stroke-dasharray', dashArray)
       .attr('rx', 0);
     
     if (isMultiParent) {
@@ -839,6 +919,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('height', height + 8)
         .attr('stroke', '#e74c3c')
         .attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 2);
     }
   }
@@ -850,8 +931,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('width', width)
       .attr('height', height)
       .attr('fill', fill)
-      .attr('stroke', finalStroke)
+      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
+      .attr('stroke-dasharray', dashArray)
       .attr('rx', 8);
     
     if (isMultiParent) {
@@ -863,6 +945,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('height', height + 8)
         .attr('stroke', '#e74c3c')
         .attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 10);
     }
   }
@@ -874,8 +957,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('width', width)
       .attr('height', height)
       .attr('fill', fill)
-      .attr('stroke', finalStroke)
+      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
+      .attr('stroke-dasharray', dashArray)
       .attr('rx', 15);
     
     if (isMultiParent) {
@@ -887,6 +971,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('height', height + 8)
         .attr('stroke', '#e74c3c')
         .attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 17);
     }
   }
@@ -898,8 +983,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('rx', halfW)
       .attr('ry', halfH)
       .attr('fill', fill)
-      .attr('stroke', finalStroke)
-      .attr('stroke-width', strokeWidth);
+      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
+      .attr('stroke-width', strokeWidth)
+      .attr('stroke-dasharray', dashArray);
     
     if (isMultiParent) {
       selection.insert('ellipse', ':first-child')
@@ -909,7 +995,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('rx', halfW + 4)
         .attr('ry', halfH + 4)
         .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2);
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "hexagon") {
@@ -926,8 +1013,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('class', 'node-shape')
       .attr('points', points)
       .attr('fill', fill)
-      .attr('stroke', finalStroke)
-      .attr('stroke-width', strokeWidth);
+      .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
+      .attr('stroke-width', strokeWidth)
+      .attr('stroke-dasharray', dashArray);
     
     if (isMultiParent) {
       const outerPoints = [
@@ -943,7 +1031,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
         .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2);
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
 }
@@ -1100,7 +1189,7 @@ function renderGraph(tabName) {
     const statusColor = getStatusColor(d.status);
     const statusStroke = d.status ? statusColor.stroke : null;
     
-    drawShape(d3.select(this), style.shape, NODE_WIDTH, NODE_HEIGHT, style.fill, defaultStroke, statusStroke, d.isMultiParent);
+    drawShape(d3.select(this), style.shape, NODE_WIDTH, NODE_HEIGHT, style.fill, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
   });
   
   // Status indicator
@@ -1183,7 +1272,7 @@ function toggleCollapse(nodeName) {
 // ==================================================
 document.getElementById('fileSelect').addEventListener('change', (e) => {
   if (e.target.value) {
-    collapsedNodes.clear(); // Reset collapsed state when switching
+    collapsedNodes.clear();
     renderGraph(e.target.value);
   }
 });
