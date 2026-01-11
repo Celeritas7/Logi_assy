@@ -167,8 +167,7 @@
 
     .node-pn {
       pointer-events: none;
-      fill: #888;
-      font-style: italic;
+      fill: #555;
     }
 
     .toggle-icon {
@@ -449,9 +448,9 @@ const STYLE_SCALE = [
   { shape: "hexagon",                 fill: "#b6d7a8" },
 ];
 
-const FONT_SIZES = [11, 12, 13, 14, 15, 16];
+const FONT_SIZES = [10, 12, 14, 16, 18, 20];
 const NODE_WIDTH = 150;
-const NODE_VERTICAL_SPACING = 100; // Increased from 70
+const NODE_HEIGHT = 50;
 
 // ==================================================
 // GLOBAL STATE
@@ -492,57 +491,6 @@ function setStatus(msg, type = 'loading') {
   const el = document.getElementById('statusIndicator');
   el.textContent = msg;
   el.className = type;
-}
-
-// ==================================================
-// VARIABLE NODE HEIGHT CALCULATION
-// ==================================================
-function calculateNodeHeight(name, partNumber) {
-  const maxCharsPerLine = 18;
-  const nameLines = Math.ceil(name.length / maxCharsPerLine);
-  
-  let height = 40; // Base height
-  
-  if (nameLines === 1) {
-    height = 50;
-  } else if (nameLines === 2) {
-    height = 65;
-  } else {
-    height = 80;
-  }
-  
-  // Add small space for part number if exists
-  if (partNumber) {
-    height += 12;
-  }
-  
-  return height;
-}
-
-// Split text into lines for display
-function wrapText(text, maxCharsPerLine) {
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = '';
-  
-  words.forEach(word => {
-    if ((currentLine + ' ' + word).trim().length <= maxCharsPerLine) {
-      currentLine = (currentLine + ' ' + word).trim();
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    }
-  });
-  
-  if (currentLine) lines.push(currentLine);
-  
-  // Limit to 3 lines max
-  if (lines.length > 3) {
-    lines.length = 3;
-    lines[2] = lines[2].substring(0, maxCharsPerLine - 3) + '...';
-  }
-  
-  return lines;
 }
 
 // ==================================================
@@ -606,10 +554,9 @@ function csvToDAG(csvData) {
     const childName = row.Child.trim();
     
     if (!nodes.has(childName)) {
-      const partNumber = row.Part_Number || row.Part_Num || '';
       nodes.set(childName, {
         name: childName,
-        partNumber: partNumber,
+        partNumber: row.Part_Number || row.Part_Num || '',
         status: row.Status || '',
         qty: parseInt(row.Qty) || 1,
         depth: -1,
@@ -618,8 +565,7 @@ function csvToDAG(csvData) {
         isMultiParent: false,
         isOrphan: false,
         fastener: row.Fastener || '',
-        fastenerQty: parseInt(row.Fastener_Qty) || 0,
-        height: calculateNodeHeight(childName, partNumber)
+        fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
     }
     
@@ -630,6 +576,7 @@ function csvToDAG(csvData) {
     parents.forEach(parentName => {
       const parentUpper = parentName.toUpperCase();
       
+      // Skip ROOT and NONE/ORPHAN
       if (parentUpper === 'ROOT') {
         return;
       }
@@ -639,6 +586,7 @@ function csvToDAG(csvData) {
         return;
       }
       
+      // Create parent node if doesn't exist
       if (!nodes.has(parentName)) {
         nodes.set(parentName, {
           name: parentName,
@@ -651,18 +599,20 @@ function csvToDAG(csvData) {
           isMultiParent: false,
           isOrphan: false,
           fastener: '',
-          fastenerQty: 0,
-          height: calculateNodeHeight(parentName, '')
+          fastenerQty: 0
         });
       }
       
+      // Link: from parent TO child (LEFT to RIGHT flow)
+      // source = parent (left), target = child (right)
       links.push({
-        source: parentName,
-        target: childName,
+        source: parentName,  // Parent node (left)
+        target: childName,   // Child node (right)
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
       
+      // Track relationships
       const childNode = nodes.get(childName);
       if (!childNode.parents.includes(parentName)) {
         childNode.parents.push(parentName);
@@ -680,7 +630,7 @@ function csvToDAG(csvData) {
     node.isMultiParent = node.parents.length > 1;
   });
   
-  // Find root node
+  // Find root node (has Parent = ROOT)
   let rootName = null;
   csvData.forEach(row => {
     const parentStr = row.Parent || '';
@@ -690,6 +640,7 @@ function csvToDAG(csvData) {
     }
   });
   
+  // If no explicit ROOT, find nodes with no parents (excluding orphans)
   if (!rootName) {
     for (const [name, node] of nodes) {
       if (node.parents.length === 0 && !node.isOrphan) {
@@ -728,7 +679,7 @@ function csvToDAG(csvData) {
     }
   }
   
-  // PASS 2: Calculate depths for orphans
+  // PASS 2: Calculate depths for orphans based on their children
   nodes.forEach(node => {
     if (node.isOrphan && node.depth === -1) {
       let minChildDepth = Infinity;
@@ -751,7 +702,7 @@ function csvToDAG(csvData) {
     }
   });
   
-  // PASS 3: Handle remaining unvisited nodes
+  // PASS 3: Handle any remaining unvisited nodes
   nodes.forEach(node => {
     if (node.depth === -1) {
       let minChildDepth = Infinity;
@@ -789,9 +740,14 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
   const node = nodesMap.get(nodeName);
   
   if (!node) return false;
+  
+  // Root is always visible
   if (node.parents.length === 0 && !node.isOrphan) return true;
+  
+  // Orphans are always visible
   if (node.isOrphan && node.parents.length === 0) return true;
   
+  // Check if ANY parent path leads to a visible, non-collapsed ancestor
   function hasVisiblePath(currentName, visited = new Set()) {
     if (visited.has(currentName)) return false;
     visited.add(currentName);
@@ -799,13 +755,18 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
     const current = nodesMap.get(currentName);
     if (!current) return false;
     
+    // Root node or orphan with no parents
     if ((current.parents.length === 0 && !current.isOrphan) || 
         (current.isOrphan && current.parents.length === 0)) {
       return true;
     }
     
+    // Check each parent
     for (const parentName of current.parents) {
+      // If parent is collapsed, this path is blocked
       if (collapsedNodes.has(parentName)) continue;
+      
+      // If parent has a visible path, we're visible
       if (hasVisiblePath(parentName, visited)) return true;
     }
     
@@ -816,47 +777,9 @@ function isNodeVisible(nodeName, nodes, collapsedNodes) {
 }
 
 function isLinkFromCollapsedParent(link, collapsedNodes) {
+  // Link goes from source (parent) to target (child)
+  // If source (parent) is collapsed, show as dotted
   return collapsedNodes.has(link.source);
-}
-
-// ==================================================
-// NODE REORDERING TO MINIMIZE CROSSINGS
-// ==================================================
-function reorderNodesToMinimizeCrossings(nodesByDepth, nodes, links) {
-  const nodesMap = new Map(nodes.map(n => [n.name, n]));
-  
-  // Sort nodes at each depth by average Y position of their parents/children
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
-    const depthInt = parseInt(depth);
-    const depthNodes = nodesByDepth[depth];
-    
-    if (depthInt === 0) {
-      // Root level - no reordering needed
-      return;
-    }
-    
-    // Calculate score based on parent positions
-    depthNodes.forEach(node => {
-      const parentPositions = [];
-      node.parents.forEach(parentName => {
-        const parent = nodesMap.get(parentName);
-        if (parent && parent.y !== undefined) {
-          parentPositions.push(parent.y);
-        }
-      });
-      
-      if (parentPositions.length > 0) {
-        node.sortScore = parentPositions.reduce((a, b) => a + b, 0) / parentPositions.length;
-      } else {
-        node.sortScore = 0;
-      }
-    });
-    
-    // Sort by score
-    depthNodes.sort((a, b) => a.sortScore - b.sortScore);
-  });
-  
-  return nodesByDepth;
 }
 
 // ==================================================
@@ -1102,24 +1025,6 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
 }
 
 // ==================================================
-// CUSTOM CURVED LINK WITH VARIED CURVATURE
-// ==================================================
-function createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor = 0.5) {
-  const midX = (sourceX + targetX) / 2;
-  const dx = targetX - sourceX;
-  const dy = targetY - sourceY;
-  
-  // Vary the control point based on vertical distance
-  const controlOffset = Math.abs(dy) * curveFactor;
-  
-  // Create path with quadratic bezier curve
-  const controlX = midX;
-  const controlY = sourceY + (dy > 0 ? controlOffset : -controlOffset) * 0.3;
-  
-  return `M ${sourceX},${sourceY} Q ${controlX},${controlY} ${midX},${(sourceY + targetY) / 2} T ${targetX},${targetY}`;
-}
-
-// ==================================================
 // RENDER DAG
 // ==================================================
 function renderGraph(tabName) {
@@ -1142,16 +1047,16 @@ function renderGraph(tabName) {
   const visibleNodes = nodes.filter(node => isNodeVisible(node.name, nodes, collapsedNodes));
   const visibleNodeNames = new Set(visibleNodes.map(n => n.name));
   
-  // Filter links
+  // Filter links (both ends visible)
   const visibleLinks = links.filter(link => 
     visibleNodeNames.has(link.source) && visibleNodeNames.has(link.target)
   );
   
   // Calculate layout dimensions
-  const margin = { top: 60, right: 200, bottom: 60, left: 120 };
+  const margin = { top: 60, right: 200, bottom: 60, left: 100 };
   
   // Group nodes by depth
-  let nodesByDepth = {};
+  const nodesByDepth = {};
   visibleNodes.forEach(node => {
     if (!nodesByDepth[node.depth]) {
       nodesByDepth[node.depth] = [];
@@ -1159,44 +1064,27 @@ function renderGraph(tabName) {
     nodesByDepth[node.depth].push(node);
   });
   
-  // Initial positioning (needed for reordering)
-  const nodePositions = new Map();
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
-    const depthNodes = nodesByDepth[depth];
-    depthNodes.forEach((node, index) => {
-      node.y = index * NODE_VERTICAL_SPACING;
-    });
-  });
-  
-  // Reorder nodes to minimize crossings
-  nodesByDepth = reorderNodesToMinimizeCrossings(nodesByDepth, visibleNodes, visibleLinks);
-  
   const depthCount = maxDepth + 1;
   const maxNodesInLevel = Math.max(...Object.values(nodesByDepth).map(arr => arr.length), 1);
   
   const width = Math.max(1400, depthCount * 280 + margin.left + margin.right);
-  const height = Math.max(800, maxNodesInLevel * NODE_VERTICAL_SPACING + margin.top + margin.bottom);
+  const height = Math.max(800, maxNodesInLevel * 80 + margin.top + margin.bottom);
   
   svg.attr('width', width).attr('height', height);
   
-  // Position nodes with variable height consideration
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
+  // Position nodes: ROOT on LEFT (depth 0 = leftmost), children to the RIGHT
+  const nodePositions = new Map();
+  
+  Object.keys(nodesByDepth).sort((a, b) => a - b).forEach(depth => {
     const depthNodes = nodesByDepth[depth];
-    const x = margin.left + parseInt(depth) * 250;
+    const x = margin.left + depth * 250;  // depth 0 = left, higher depth = more right
+    const totalHeight = depthNodes.length * 70;
+    const startY = (height - totalHeight) / 2 + 35;
     
-    // Calculate total height needed for this column
-    let totalHeight = 0;
-    depthNodes.forEach(node => {
-      totalHeight += node.height + 30; // 30px gap between nodes
-    });
-    
-    let currentY = (height - totalHeight) / 2 + depthNodes[0].height / 2;
-    
-    depthNodes.forEach((node) => {
+    depthNodes.forEach((node, index) => {
       node.x = x;
-      node.y = currentY;
-      nodePositions.set(node.name, { x: node.x, y: node.y, height: node.height });
-      currentY += node.height + 30;
+      node.y = startY + index * 70;
+      nodePositions.set(node.name, { x: node.x, y: node.y });
     });
   });
   
@@ -1229,19 +1117,15 @@ function renderGraph(tabName) {
     .attr('d', 'M 0,-5 L 10,0 L 0,5')
     .attr('fill', '#ccc');
   
-  // Track links per target for offset calculation
-  const linksPerTarget = new Map();
-  visibleLinks.forEach(link => {
-    if (!linksPerTarget.has(link.target)) {
-      linksPerTarget.set(link.target, []);
-    }
-    linksPerTarget.get(link.target).push(link);
-  });
+  // Link generator
+  const linkGenerator = d3.linkHorizontal()
+    .x(d => d.x)
+    .y(d => d.y);
   
-  // Draw links with varied curvature
+  // Draw links (from parent on left to child on right)
   visibleLinks.forEach(link => {
-    const sourcePos = nodePositions.get(link.source);
-    const targetPos = nodePositions.get(link.target);
+    const sourcePos = nodePositions.get(link.source); // Parent (left)
+    const targetPos = nodePositions.get(link.target); // Child (right)
     
     if (!sourcePos || !targetPos) return;
     
@@ -1249,28 +1133,13 @@ function renderGraph(tabName) {
     const fastenerColor = getFastenerColor(link.fastener);
     const baseColor = fastenerColor || '#888';
     
-    // Calculate curve factor based on vertical distance and link index
-    const targetLinks = linksPerTarget.get(link.target) || [];
-    const linkIndex = targetLinks.indexOf(link);
-    const totalLinks = targetLinks.length;
-    
-    // Vary curvature for multiple links to same target
-    let curveFactor = 0.5;
-    if (totalLinks > 1) {
-      curveFactor = 0.3 + (linkIndex / totalLinks) * 0.4;
-    }
-    
-    const sourceX = sourcePos.x + NODE_WIDTH / 2;
-    const sourceY = sourcePos.y;
-    const targetX = targetPos.x - NODE_WIDTH / 2;
-    const targetY = targetPos.y;
-    
-    // Use custom curved link
-    const pathD = createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor);
-    
+    // Arrow goes from source (parent, left) to target (child, right)
     g.append('path')
       .attr('class', 'link')
-      .attr('d', pathD)
+      .attr('d', linkGenerator({
+        source: { x: sourcePos.x + NODE_WIDTH / 2, y: sourcePos.y },  // Right edge of parent
+        target: { x: targetPos.x - NODE_WIDTH / 2, y: targetPos.y }   // Left edge of child
+      }))
       .attr('stroke', baseColor)
       .attr('stroke-width', isCollapsed ? 1.5 : 2)
       .attr('stroke-dasharray', isCollapsed ? '5,5' : 'none')
@@ -1279,8 +1148,8 @@ function renderGraph(tabName) {
     
     // Fastener label
     if (link.fastener && !isCollapsed) {
-      const midX = (sourceX + targetX) / 2;
-      const midY = (sourceY + targetY) / 2 - 8;
+      const midX = (sourcePos.x + NODE_WIDTH / 2 + targetPos.x - NODE_WIDTH / 2) / 2;
+      const midY = (sourcePos.y + targetPos.y) / 2 - 8;
       
       g.append('text')
         .attr('class', 'link-label')
@@ -1288,6 +1157,7 @@ function renderGraph(tabName) {
         .attr('y', midY)
         .attr('text-anchor', 'middle')
         .attr('fill', baseColor)
+        .attr('opacity', 1)
         .text(link.fastenerQty ? `${link.fastener} ×${link.fastenerQty}` : link.fastener);
     }
   });
@@ -1300,27 +1170,14 @@ function renderGraph(tabName) {
     .attr('class', 'node')
     .attr('transform', d => `translate(${d.x}, ${d.y})`);
   
-  // Add tooltip (native browser title)
-  nodeGroups.append('title')
-    .text(d => {
-      let tooltip = d.name;
-      if (d.partNumber) {
-        tooltip += `\nP/N: ${d.partNumber}`;
-      }
-      if (d.status) {
-        tooltip += `\nStatus: ${d.status}`;
-      }
-      return tooltip;
-    });
-  
-  // Draw shapes with variable height
+  // Draw shapes
   nodeGroups.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
     const defaultStroke = darkenColor(style.fill);
     const statusColor = getStatusColor(d.status);
     const statusStroke = d.status ? statusColor.stroke : null;
     
-    drawShape(d3.select(this), style.shape, NODE_WIDTH, d.height, style.fill, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
+    drawShape(d3.select(this), style.shape, NODE_WIDTH, NODE_HEIGHT, style.fill, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
   });
   
   // Status indicator
@@ -1328,50 +1185,43 @@ function renderGraph(tabName) {
     .append('circle')
     .attr('class', 'status-indicator')
     .attr('cx', -NODE_WIDTH / 2 + 12)
-    .attr('cy', d => -d.height / 2 + 12)
+    .attr('cy', -NODE_HEIGHT / 2 + 12)
     .attr('r', 7)
     .attr('fill', d => getStatusColor(d.status).fill)
     .attr('stroke', d => getStatusColor(d.status).stroke);
   
-  // Node labels (with word wrap)
-  nodeGroups.each(function(d) {
-    const group = d3.select(this);
-    const fontSize = getFontSize(d.depth, maxDepth);
-    const lines = wrapText(d.name, 18);
-    
-    const lineHeight = fontSize + 2;
-    const totalTextHeight = lines.length * lineHeight;
-    const startY = d.partNumber 
-      ? -totalTextHeight / 2 - 4
-      : -totalTextHeight / 2 + lineHeight / 2;
-    
-    lines.forEach((line, i) => {
-      group.append('text')
-        .attr('class', 'node-label')
-        .attr('text-anchor', 'middle')
-        .attr('y', startY + i * lineHeight)
-        .attr('font-size', fontSize + 'px')
-        .text(line);
+  // Node labels
+  nodeGroups.append('text')
+    .attr('class', 'node-label')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => d.partNumber ? '-0.2em' : '0.35em')
+    .attr('font-size', d => getFontSize(d.depth, maxDepth) + 'px')
+    .text(d => {
+      const name = d.name;
+      const maxLen = 18;
+      return name.length > maxLen ? name.substring(0, maxLen - 2) + '...' : name;
     });
-    
-    // Part number (small, less prominent)
-    if (d.partNumber) {
-      group.append('text')
-        .attr('class', 'node-pn')
-        .attr('text-anchor', 'middle')
-        .attr('y', startY + lines.length * lineHeight + 4)
-        .attr('font-size', '8px')
-        .text(d.partNumber.length > 20 ? d.partNumber.substring(0, 18) + '...' : d.partNumber);
-    }
-  });
   
-  // Collapse/expand indicator
+  // Part number
+  nodeGroups.filter(d => d.partNumber)
+    .append('text')
+    .attr('class', 'node-pn')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '1em')
+    .attr('font-size', '9px')
+    .text(d => {
+      const pn = d.partNumber;
+      const display = pn.length > 22 ? pn.substring(0, 20) + '...' : pn;
+      return `(${display})`;
+    });
+  
+  // Collapse/expand indicator (only for nodes with children)
   const nodesWithChildren = nodeGroups.filter(d => d.children.length > 0);
   
   nodesWithChildren.append('circle')
     .attr('class', 'collapse-indicator')
     .attr('cx', NODE_WIDTH / 2 - 10)
-    .attr('cy', d => -d.height / 2 + 10)
+    .attr('cy', -NODE_HEIGHT / 2 + 10)
     .attr('r', 10)
     .on('click', function(event, d) {
       event.stopPropagation();
@@ -1381,7 +1231,7 @@ function renderGraph(tabName) {
   nodesWithChildren.append('text')
     .attr('class', 'toggle-icon')
     .attr('x', NODE_WIDTH / 2 - 10)
-    .attr('y', d => -d.height / 2 + 10)
+    .attr('y', -NODE_HEIGHT / 2 + 10)
     .attr('text-anchor', 'middle')
     .attr('dy', '0.35em')
     .attr('font-size', '14px')
@@ -1415,6 +1265,7 @@ document.getElementById('fileSelect').addEventListener('change', (e) => {
   }
 });
 
+// Load all sheets on page load
 loadAllSheets();
 
 </script>

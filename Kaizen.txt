@@ -1,3 +1,14 @@
+Any other specific improvements you want to discuss? ACTUALLY. CAN I PLACE THE ORPHAN NODES SOMEWHERE HANGING IN FREE SPACE AND MAKE MY TREE DIAGRAM MORE LIKE A STAR SHAPED CONNECTIONS SO THAT THE SPACE WILL BE USED OPTIMALLY. THE NODE WITH MORE CONNECTIONS WILL MOVE AWAY FOR THE BETTER UI
+
+
+
+
+
+
+
+
+
+
 Now next step. Lets have a discussion before that. As you can see I'm trying to set the child with many parents. but im not able to do it with current setup.
 
 image 1-2: I tried ";" sign but it is not generating any result in the tree.
