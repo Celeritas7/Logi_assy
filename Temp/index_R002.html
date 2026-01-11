@@ -414,6 +414,7 @@ const NODE_HEIGHT = 50;
 let loadedData = {};
 let currentRoot = null;
 let maxDepth = 0;
+let simulation = null;
 
 // ==================================================
 // UTILITY FUNCTIONS
@@ -468,8 +469,8 @@ function parseCSV(csvText) {
       row[header.trim()] = (values[index] || '').trim();
     });
     
-    // Skip empty rows (no Child)
-    if (!row.Child) continue;
+    // Skip empty rows (no Seq or no Child)
+    if (!row.Seq || !row.Child) continue;
     
     data.push(row);
   }
@@ -500,34 +501,11 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO HIERARCHY CONVERSION (No Seq Required)
+// CSV TO HIERARCHY CONVERSION
 // ==================================================
 function csvToHierarchy(csvData) {
-  // Filter rows that have Child column
-  const validRows = csvData.filter(row => row.Child);
-  
-  if (validRows.length === 0) {
-    console.error('No valid rows found');
-    return null;
-  }
-  
-  // Find root (Parent = ROOT or empty Parent for the top-level item)
-  let rootRow = validRows.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
-  
-  // If no explicit ROOT, try to find nodes that aren't children of anything
-  if (!rootRow) {
-    const allChildren = new Set(validRows.map(r => r.Child));
-    const allParents = new Set(validRows.map(r => r.Parent).filter(p => p));
-    
-    // Find parents that aren't listed as children
-    for (const row of validRows) {
-      if (row.Parent && !allChildren.has(row.Parent)) {
-        // This parent doesn't exist as a child, so it might be root
-        rootRow = { Child: row.Parent, Parent: 'ROOT' };
-        break;
-      }
-    }
-  }
+  // Find root (Parent = ROOT)
+  const rootRow = csvData.find(row => row.Parent && row.Parent.toUpperCase() === 'ROOT');
   
   if (!rootRow) {
     console.error('No ROOT found in CSV');
@@ -536,16 +514,23 @@ function csvToHierarchy(csvData) {
   
   const rootName = rootRow.Child;
   
-  // Build lookup map: parent -> children
+  // Build lookup map
   const childrenMap = {};
-  validRows.forEach(row => {
+  csvData.forEach(row => {
     const parent = row.Parent;
-    if (!parent) return;
-    
     if (!childrenMap[parent]) {
       childrenMap[parent] = [];
     }
     childrenMap[parent].push(row);
+  });
+  
+  // Sort children by Seq
+  Object.keys(childrenMap).forEach(parent => {
+    childrenMap[parent].sort((a, b) => {
+      const seqA = a.Seq || '';
+      const seqB = b.Seq || '';
+      return seqA.localeCompare(seqB, undefined, { numeric: true });
+    });
   });
   
   // Recursive build
@@ -629,7 +614,7 @@ async function loadAllSheets() {
   } else {
     setStatus('No valid data found. Check Google Sheet permissions.', 'error');
     document.getElementById('treeContainer').innerHTML = 
-      '<div class="message error">Could not load any sheets. Make sure your Google Sheet is published to web.<br><br>Go to: File → Share → Publish to web → Select CSV format → Publish</div>';
+      '<div class="message error">Could not load any sheets. Make sure your Google Sheet is published to web.</div>';
   }
 }
 
@@ -728,11 +713,16 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
 }
 
 // ==================================================
-// RENDER TREE
+// RADIAL TREE LAYOUT (Root on Left, Expand Right)
 // ==================================================
 function renderTree(tabName) {
   const svg = d3.select('#treeSvg');
   svg.selectAll('*').remove();
+  
+  if (simulation) {
+    simulation.stop();
+    simulation = null;
+  }
 
   const hierarchyData = loadedData[tabName];
   if (!hierarchyData) {
@@ -741,10 +731,6 @@ function renderTree(tabName) {
       '<div class="message error">No data available for this assembly.</div>';
     return;
   }
-
-  // Reset container
-  document.getElementById('treeContainer').innerHTML = '<svg id="treeSvg"></svg>';
-  const newSvg = d3.select('#treeSvg');
 
   currentRoot = d3.hierarchy(hierarchyData);
   maxDepth = getMaxDepth(hierarchyData);
@@ -762,7 +748,7 @@ function renderTree(tabName) {
 
 function update() {
   const svg = d3.select('#treeSvg');
-  svg.selectAll('*').remove();
+  const container = document.getElementById('treeContainer');
 
   // Count visible nodes for sizing
   const allNodes = currentRoot.descendants();
@@ -774,14 +760,16 @@ function update() {
 
   svg.attr('width', width).attr('height', height);
 
+  svg.selectAll('g.main').remove();
   const g = svg.append('g')
     .attr('class', 'main')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-  // Use D3 tree layout
+  // Use D3 tree layout with radial-like spreading
   const treeLayout = d3.tree()
     .size([height - margin.top - margin.bottom, width - margin.left - margin.right - 150])
     .separation((a, b) => {
+      // More separation for nodes with many children
       return (a.parent === b.parent ? 1 : 1.5);
     });
 
@@ -793,7 +781,7 @@ function update() {
     .y(d => d.x);
 
   // Draw links
-  g.selectAll('.link')
+  const links = g.selectAll('.link')
     .data(currentRoot.links())
     .enter()
     .append('path')
