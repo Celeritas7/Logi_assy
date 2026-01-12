@@ -214,64 +214,6 @@
       fill: none;
       stroke-width: 2px;
     }
-
-    /* Desktop-only elements */
-    .desktop-only {
-      display: inline-block;
-    }
-
-    /* Mobile badge */
-    .mobile-badge {
-      background: #e74c3c;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      display: none;
-    }
-
-    /* Lock indicator on nodes */
-    .lock-indicator {
-      cursor: pointer;
-      font-size: 12px;
-      user-select: none;
-    }
-
-    .lock-indicator:hover {
-      opacity: 0.7;
-    }
-
-    .locked-node .node-shape {
-      stroke-width: 3px;
-    }
-
-    /* Mobile styles */
-    @media (max-width: 768px) {
-      .desktop-only {
-        display: none !important;
-      }
-      
-      .mobile-badge {
-        display: inline-block;
-      }
-      
-      .header {
-        padding: 10px 15px;
-      }
-      
-      .header h1 {
-        font-size: 16px;
-      }
-      
-      .legend {
-        padding: 8px 10px;
-        font-size: 9px;
-      }
-      
-      .legend-item {
-        font-size: 8px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -285,11 +227,7 @@
   <button class="header-btn" onclick="refreshData()">🔄 Refresh</button>
   <button class="header-btn" onclick="expandAll()">➕ Expand All</button>
   <button class="header-btn" onclick="collapseAll()">➖ Collapse All</button>
-  <button class="header-btn desktop-only" onclick="lockAll()">🔒 Lock All</button>
-  <button class="header-btn desktop-only" onclick="unlockAll()">🔓 Unlock All</button>
-  <button class="header-btn desktop-only" onclick="resetPositions()">↺ Reset</button>
   <span id="statusIndicator" class="loading"></span>
-  <span id="mobileIndicator" class="mobile-badge"></span>
 </div>
 
 <div class="legend">
@@ -481,49 +419,18 @@ function getFastenerColor(fastener) {
 }
 
 // ==================================================
-// STYLE CONFIGURATION - 8 levels with unique colors
-// Level 0 (leftmost) = Parts, Level 7 (rightmost) = Final Assembly
+// STYLE CONFIGURATION - 8 levels
 // ==================================================
 const STYLE_SCALE = [
-  { shape: "rectangle",         fill: "#e8e8e8" },  // 0 - Parts (gray)
-  { shape: "rounded_rectangle", fill: "#ffcdd2" },  // 1 - Minor Assy (light red)
-  { shape: "pentagon",          fill: "#ffe0b2" },  // 2 - Sub-sub-sub-sub Assy (light orange)
-  { shape: "stadium",           fill: "#fff9c4" },  // 3 - Sub-sub-sub Assy (light yellow)
-  { shape: "parallelogram",     fill: "#c8e6c9" },  // 4 - Sub-sub Assy (light green)
-  { shape: "hexagon",           fill: "#b3e5fc" },  // 5 - Sub Assy (light blue)
-  { shape: "ellipse",           fill: "#e1bee7" },  // 6 - Major Assy (light purple)
-  { shape: "octagon",           fill: "#a5d6a7" },  // 7 - Final Assy (green)
+  { shape: "rectangle",         fill: "#f5f5f5" },  // 0 - Parts
+  { shape: "rounded_rectangle", fill: "#fee8e8" },  // 1 - Minor
+  { shape: "pentagon",          fill: "#fce4d6" },  // 2 - L4
+  { shape: "stadium",           fill: "#fff2cc" },  // 3 - L3
+  { shape: "parallelogram",     fill: "#d9ead3" },  // 4 - L2
+  { shape: "hexagon",           fill: "#d0e0e3" },  // 5 - Sub
+  { shape: "ellipse",           fill: "#f3e9cf" },  // 6 - Major
+  { shape: "octagon",           fill: "#b6d7a8" },  // 7 - Final
 ];
-
-// Random color palette for unique node colors
-const NODE_COLOR_PALETTE = [
-  "#ffcdd2", "#f8bbd9", "#e1bee7", "#d1c4e9", "#c5cae9",
-  "#bbdefb", "#b3e5fc", "#b2ebf2", "#b2dfdb", "#c8e6c9",
-  "#dcedc8", "#f0f4c3", "#fff9c4", "#ffecb3", "#ffe0b2",
-  "#ffccbc", "#d7ccc8", "#cfd8dc", "#fce4ec", "#f3e5f5",
-  "#ede7f6", "#e8eaf6", "#e3f2fd", "#e1f5fe", "#e0f7fa",
-  "#e0f2f1", "#e8f5e9", "#f1f8e9", "#f9fbe7", "#fffde7",
-  "#fff8e1", "#fff3e0", "#fbe9e7", "#efebe9", "#eceff1"
-];
-
-// Store assigned colors per node for consistency
-const nodeColorMap = new Map();
-
-function getRandomNodeColor(nodeName) {
-  if (nodeColorMap.has(nodeName)) {
-    return nodeColorMap.get(nodeName);
-  }
-  // Use hash of node name for consistent color assignment
-  let hash = 0;
-  for (let i = 0; i < nodeName.length; i++) {
-    hash = ((hash << 5) - hash) + nodeName.charCodeAt(i);
-    hash = hash & hash;
-  }
-  const colorIndex = Math.abs(hash) % NODE_COLOR_PALETTE.length;
-  const color = NODE_COLOR_PALETTE[colorIndex];
-  nodeColorMap.set(nodeName, color);
-  return color;
-}
 
 const FONT_SIZES = [10, 11, 11, 12, 12, 13, 14, 15];
 const NODE_WIDTH = 140;
@@ -535,59 +442,7 @@ const NODE_HEIGHT_BASE = 50;
 let loadedData = {};
 let currentGraphData = null;
 let collapsedNodes = new Set();
-let lockedNodes = new Set();
 let simulation = null;
-let currentTabName = '';
-
-// Mobile detection
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-  || window.innerWidth < 768;
-
-// LocalStorage keys
-const STORAGE_PREFIX = 'assembly_tree_';
-
-function getStorageKey(tabName) {
-  return STORAGE_PREFIX + tabName.replace(/\s+/g, '_');
-}
-
-function savePositions(tabName, nodes) {
-  if (isMobile) return; // Don't save from mobile
-  
-  const positions = {};
-  nodes.forEach(node => {
-    positions[node.name] = {
-      x: node.x,
-      y: node.y,
-      locked: lockedNodes.has(node.name)
-    };
-  });
-  
-  try {
-    localStorage.setItem(getStorageKey(tabName), JSON.stringify(positions));
-  } catch (e) {
-    console.warn('Could not save positions to localStorage:', e);
-  }
-}
-
-function loadPositions(tabName) {
-  try {
-    const saved = localStorage.getItem(getStorageKey(tabName));
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (e) {
-    console.warn('Could not load positions from localStorage:', e);
-  }
-  return null;
-}
-
-function clearPositions(tabName) {
-  try {
-    localStorage.removeItem(getStorageKey(tabName));
-  } catch (e) {
-    console.warn('Could not clear positions from localStorage:', e);
-  }
-}
 
 // ==================================================
 // UTILITY FUNCTIONS
@@ -1210,16 +1065,6 @@ function renderGraph(tabName) {
   }
 
   currentGraphData = graphData;
-  currentTabName = tabName;
-  
-  // Show mobile indicator
-  const mobileIndicator = document.getElementById('mobileIndicator');
-  if (isMobile) {
-    mobileIndicator.textContent = '📱 View Only';
-    mobileIndicator.style.display = 'inline-block';
-  } else {
-    mobileIndicator.style.display = 'none';
-  }
   
   if (simulation) simulation.stop();
   
@@ -1266,34 +1111,13 @@ function renderGraph(tabName) {
   
   const g = svg.append('g').attr('class', 'main');
   
-  // Initialize node positions
+  // Initialize node positions based on depth
   const depthSpacing = 220;
   const margin = { left: 150, top: 100 };
   
-  // Load saved positions
-  const savedPositions = loadPositions(tabName);
-  
   visibleNodes.forEach(node => {
-    if (savedPositions && savedPositions[node.name]) {
-      // Restore saved position
-      node.x = savedPositions[node.name].x;
-      node.y = savedPositions[node.name].y;
-      if (savedPositions[node.name].locked) {
-        lockedNodes.add(node.name);
-        node.fx = node.x;
-        node.fy = node.y;
-      }
-    } else {
-      // Default position based on depth
-      node.x = margin.left + node.depth * depthSpacing;
-      node.y = height / 2 + (Math.random() - 0.5) * 200;
-    }
-    
-    // Apply existing locks
-    if (lockedNodes.has(node.name)) {
-      node.fx = node.x;
-      node.fy = node.y;
-    }
+    node.x = margin.left + node.depth * depthSpacing;
+    node.y = height / 2 + (Math.random() - 0.5) * 200;
   });
   
   // Force simulation
@@ -1332,20 +1156,16 @@ function renderGraph(tabName) {
     .attr('fill', d => getFastenerColor(d.fastener) || '#888')
     .text(d => d.fastenerQty ? `${d.fastener} ×${d.fastenerQty}` : d.fastener);
   
-  // Draw nodes - with conditional drag (desktop only)
+  // Draw nodes
   const nodeElements = g.selectAll('.node')
     .data(visibleNodes)
     .enter()
     .append('g')
-    .attr('class', d => 'node' + (lockedNodes.has(d.name) ? ' locked-node' : ''));
-  
-  // Only enable drag on desktop
-  if (!isMobile) {
-    nodeElements.call(d3.drag()
+    .attr('class', 'node')
+    .call(d3.drag()
       .on('start', dragstarted)
       .on('drag', dragged)
       .on('end', dragended));
-  }
   
   // Add tooltip
   nodeElements.append('title')
@@ -1353,19 +1173,17 @@ function renderGraph(tabName) {
       let tip = d.name;
       if (d.partNumber) tip += `\nP/N: ${d.partNumber}`;
       if (d.status) tip += `\nStatus: ${d.status}`;
-      if (lockedNodes.has(d.name)) tip += `\n🔒 Locked`;
       return tip;
     });
   
-  // Draw shapes with unique colors per node
+  // Draw shapes
   nodeElements.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
-    const uniqueColor = getRandomNodeColor(d.name);
-    const defaultStroke = darkenColor(uniqueColor);
+    const defaultStroke = darkenColor(style.fill);
     const statusColor = getStatusColor(d.status);
     const statusStroke = d.status ? statusColor.stroke : null;
     
-    drawShape(d3.select(this), style.shape, NODE_WIDTH, d.height, uniqueColor, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
+    drawShape(d3.select(this), style.shape, NODE_WIDTH, d.height, style.fill, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
   });
   
   // Status indicator
@@ -1377,25 +1195,6 @@ function renderGraph(tabName) {
     .attr('r', 6)
     .attr('fill', d => getStatusColor(d.status).fill)
     .attr('stroke', d => getStatusColor(d.status).stroke);
-  
-  // Lock indicator (desktop only)
-  if (!isMobile) {
-    nodeElements.append('text')
-      .attr('class', 'lock-indicator')
-      .attr('x', NODE_WIDTH / 2 - 12)
-      .attr('y', d => -d.height / 2 + 12)
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '12px')
-      .text(d => lockedNodes.has(d.name) ? '🔒' : '🔓')
-      .on('click', function(event, d) {
-        event.stopPropagation();
-        toggleLock(d);
-        // Update icon
-        d3.select(this).text(lockedNodes.has(d.name) ? '🔒' : '🔓');
-        // Update node class
-        d3.select(this.parentNode).classed('locked-node', lockedNodes.has(d.name));
-      });
-  }
   
   // Node labels
   nodeElements.each(function(d) {
@@ -1456,10 +1255,8 @@ function renderGraph(tabName) {
   simulation.on('tick', () => {
     // Keep nodes within bounds and constrain X by depth
     visibleNodes.forEach(node => {
-      if (!lockedNodes.has(node.name)) {
-        const targetX = margin.left + node.depth * depthSpacing;
-        node.x = node.x * 0.95 + targetX * 0.05;
-      }
+      const targetX = margin.left + node.depth * depthSpacing;
+      node.x = node.x * 0.95 + targetX * 0.05; // Smooth constraint
       node.x = Math.max(NODE_WIDTH / 2 + 20, Math.min(width - NODE_WIDTH / 2 - 20, node.x));
       node.y = Math.max(node.height / 2 + 20, Math.min(height - node.height / 2 - 20, node.y));
     });
@@ -1482,104 +1279,23 @@ function renderGraph(tabName) {
     nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
   });
   
-  // Save positions when simulation ends
-  simulation.on('end', () => {
-    savePositions(tabName, visibleNodes);
-  });
-  
-  // Drag functions (desktop only)
+  // Drag functions
   function dragstarted(event, d) {
-    if (isMobile || lockedNodes.has(d.name)) return;
     if (!event.active) simulation.alphaTarget(0.3).restart();
     d.fx = d.x;
     d.fy = d.y;
   }
   
   function dragged(event, d) {
-    if (isMobile || lockedNodes.has(d.name)) return;
     d.fx = event.x;
     d.fy = event.y;
   }
   
   function dragended(event, d) {
-    if (isMobile) return;
     if (!event.active) simulation.alphaTarget(0);
-    
-    if (!lockedNodes.has(d.name)) {
-      d.fx = null;
-      d.fy = null;
-    }
-    
-    // Save positions after drag
-    savePositions(tabName, visibleNodes);
+    d.fx = null;
+    d.fy = null;
   }
-}
-
-// ==================================================
-// LOCK/UNLOCK FUNCTIONS
-// ==================================================
-function toggleLock(node) {
-  if (lockedNodes.has(node.name)) {
-    // Unlock
-    lockedNodes.delete(node.name);
-    node.fx = null;
-    node.fy = null;
-  } else {
-    // Lock
-    lockedNodes.add(node.name);
-    node.fx = node.x;
-    node.fy = node.y;
-  }
-  
-  // Save positions
-  if (currentGraphData) {
-    savePositions(currentTabName, currentGraphData.nodes);
-  }
-}
-
-function lockAll() {
-  if (isMobile || !currentGraphData) return;
-  
-  currentGraphData.nodes.forEach(node => {
-    lockedNodes.add(node.name);
-    node.fx = node.x;
-    node.fy = node.y;
-  });
-  
-  savePositions(currentTabName, currentGraphData.nodes);
-  renderGraph(currentTabName);
-}
-
-function unlockAll() {
-  if (isMobile || !currentGraphData) return;
-  
-  currentGraphData.nodes.forEach(node => {
-    lockedNodes.delete(node.name);
-    node.fx = null;
-    node.fy = null;
-  });
-  
-  savePositions(currentTabName, currentGraphData.nodes);
-  renderGraph(currentTabName);
-}
-
-function resetPositions() {
-  if (isMobile || !currentTabName) return;
-  
-  lockedNodes.clear();
-  clearPositions(currentTabName);
-  
-  // Reset node positions
-  if (currentGraphData) {
-    currentGraphData.nodes.forEach(node => {
-      node.fx = null;
-      node.fy = null;
-      node.x = undefined;
-      node.y = undefined;
-    });
-  }
-  
-  renderGraph(currentTabName);
 }
 
 function toggleCollapse(nodeName) {
