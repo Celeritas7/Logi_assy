@@ -18,7 +18,6 @@
       min-height: 100vh;
     }
 
-    /* Header / Controls */
     .header {
       background: #2c3e50;
       color: white;
@@ -74,7 +73,6 @@
       font-size: 14px;
     }
 
-    /* Legend */
     .legend {
       background: white;
       padding: 10px 20px;
@@ -135,7 +133,6 @@
       margin: 0 5px;
     }
 
-    /* SVG Container */
     .tree-container {
       width: 100%;
       height: calc(100vh - 140px);
@@ -147,7 +144,6 @@
       display: block;
     }
 
-    /* Node styles */
     .node {
       cursor: pointer;
     }
@@ -178,7 +174,6 @@
       pointer-events: none;
     }
 
-    /* Edge styles */
     .link {
       fill: none;
     }
@@ -189,12 +184,10 @@
       font-weight: 500;
     }
 
-    /* Status indicator */
     .status-indicator {
       stroke-width: 2px;
     }
 
-    /* Collapse indicator */
     .collapse-indicator {
       fill: white;
       stroke: #666;
@@ -206,7 +199,6 @@
       fill: #f0f0f0;
     }
 
-    /* Error/Info messages */
     .message {
       padding: 40px;
       text-align: center;
@@ -218,17 +210,9 @@
       color: #e74c3c;
     }
 
-    /* Multi-parent indicator */
     .multi-parent-indicator {
       fill: none;
       stroke-width: 2px;
-    }
-
-    /* Orphan indicator */
-    .orphan-indicator {
-      fill: none;
-      stroke-width: 2px;
-      stroke-dasharray: 5,3;
     }
   </style>
 </head>
@@ -247,7 +231,6 @@
 </div>
 
 <div class="legend">
-  <!-- Shape Legend -->
   <div class="legend-section">
     <span class="legend-title">Shapes:</span>
     <div class="legend-item">
@@ -302,7 +285,6 @@
 
   <div class="legend-divider"></div>
 
-  <!-- Special Indicators -->
   <div class="legend-section">
     <span class="legend-title">Special:</span>
     <div class="legend-item">
@@ -318,17 +300,10 @@
       </svg>
       <span>Orphan</span>
     </div>
-    <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 30 16">
-        <line x1="2" y1="8" x2="28" y2="8" stroke="#888" stroke-width="2" stroke-dasharray="4,3" opacity="0.4"/>
-      </svg>
-      <span>Collapsed</span>
-    </div>
   </div>
 
   <div class="legend-divider"></div>
 
-  <!-- Status Legend -->
   <div class="legend-section">
     <span class="legend-title">Status:</span>
     <div class="legend-item">
@@ -347,19 +322,10 @@
       <div class="legend-status" style="background: #e74c3c; border-color: #c0392b;"></div>
       <span>Blocked</span>
     </div>
-    <div class="legend-item">
-      <div class="legend-status" style="background: #e67e22; border-color: #d35400;"></div>
-      <span>On Hold</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-status" style="background: #3498db; border-color: #2980b9;"></div>
-      <span>Review</span>
-    </div>
   </div>
 
   <div class="legend-divider"></div>
 
-  <!-- Fastener Color Legend -->
   <div class="legend-section">
     <span class="legend-title">Fasteners:</span>
     <div class="legend-item">
@@ -381,10 +347,6 @@
     <div class="legend-item">
       <div class="legend-color" style="background: #e74c3c;"></div>
       <span>Press</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #7f8c8d;"></div>
-      <span>Original</span>
     </div>
   </div>
 </div>
@@ -457,23 +419,22 @@ function getFastenerColor(fastener) {
 }
 
 // ==================================================
-// STYLE CONFIGURATION (depth 0 = leftmost/parts, maxDepth = rightmost/final)
-// 8 levels: Parts → Minor → Sub-sub-sub-sub → Sub-sub-sub → Sub-sub → Sub → Major → Final
+// STYLE CONFIGURATION - 8 levels
 // ==================================================
 const STYLE_SCALE = [
-  { shape: "rectangle",         fill: "#f5f5f5" },  // 0 - Parts (leftmost)
-  { shape: "rounded_rectangle", fill: "#fee8e8" },  // 1 - Minor Assy
-  { shape: "pentagon",          fill: "#fce4d6" },  // 2 - Sub-sub-sub-sub Assy
-  { shape: "stadium",           fill: "#fff2cc" },  // 3 - Sub-sub-sub Assy
-  { shape: "parallelogram",     fill: "#d9ead3" },  // 4 - Sub-sub Assy
-  { shape: "hexagon",           fill: "#d0e0e3" },  // 5 - Sub Assy
-  { shape: "ellipse",           fill: "#f3e9cf" },  // 6 - Major Assy
-  { shape: "octagon",           fill: "#b6d7a8" },  // 7 - Final Assy (rightmost)
+  { shape: "rectangle",         fill: "#f5f5f5" },  // 0 - Parts
+  { shape: "rounded_rectangle", fill: "#fee8e8" },  // 1 - Minor
+  { shape: "pentagon",          fill: "#fce4d6" },  // 2 - L4
+  { shape: "stadium",           fill: "#fff2cc" },  // 3 - L3
+  { shape: "parallelogram",     fill: "#d9ead3" },  // 4 - L2
+  { shape: "hexagon",           fill: "#d0e0e3" },  // 5 - Sub
+  { shape: "ellipse",           fill: "#f3e9cf" },  // 6 - Major
+  { shape: "octagon",           fill: "#b6d7a8" },  // 7 - Final
 ];
 
-const FONT_SIZES = [11, 12, 13, 14, 15, 16];
-const NODE_WIDTH = 150;
-const NODE_VERTICAL_SPACING = 100;
+const FONT_SIZES = [10, 11, 11, 12, 12, 13, 14, 15];
+const NODE_WIDTH = 140;
+const NODE_HEIGHT_BASE = 50;
 
 // ==================================================
 // GLOBAL STATE
@@ -481,6 +442,7 @@ const NODE_VERTICAL_SPACING = 100;
 let loadedData = {};
 let currentGraphData = null;
 let collapsedNodes = new Set();
+let simulation = null;
 
 // ==================================================
 // UTILITY FUNCTIONS
@@ -496,18 +458,17 @@ function darkenColor(hex, factor = 0.7) {
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
 
-// Style based on depth: 0 = leftmost (parts), maxDepth = rightmost (final)
 function getStyleForDepth(depth, maxDepth) {
   if (maxDepth === 0) return STYLE_SCALE[STYLE_SCALE.length - 1];
-  const normalizedDepth = depth / maxDepth; // 0 = parts, 1 = final
-  const index = Math.round(normalizedDepth * (STYLE_SCALE.length - 1));
+  const normalizedDepth = depth / maxDepth;
+  const index = Math.min(Math.round(normalizedDepth * (STYLE_SCALE.length - 1)), STYLE_SCALE.length - 1);
   return STYLE_SCALE[index];
 }
 
 function getFontSize(depth, maxDepth) {
   if (maxDepth === 0) return FONT_SIZES[FONT_SIZES.length - 1];
   const normalizedDepth = depth / maxDepth;
-  const index = Math.round(normalizedDepth * (FONT_SIZES.length - 1));
+  const index = Math.min(Math.round(normalizedDepth * (FONT_SIZES.length - 1)), FONT_SIZES.length - 1);
   return FONT_SIZES[index];
 }
 
@@ -517,27 +478,11 @@ function setStatus(msg, type = 'loading') {
   el.className = type;
 }
 
-// ==================================================
-// VARIABLE NODE HEIGHT CALCULATION
-// ==================================================
 function calculateNodeHeight(name, partNumber) {
-  const maxCharsPerLine = 18;
+  const maxCharsPerLine = 16;
   const nameLines = Math.ceil(name.length / maxCharsPerLine);
-  
-  let height = 40;
-  
-  if (nameLines === 1) {
-    height = 50;
-  } else if (nameLines === 2) {
-    height = 65;
-  } else {
-    height = 80;
-  }
-  
-  if (partNumber) {
-    height += 12;
-  }
-  
+  let height = nameLines <= 1 ? 45 : (nameLines === 2 ? 55 : 65);
+  if (partNumber) height += 10;
   return height;
 }
 
@@ -551,12 +496,11 @@ function wrapText(text, maxCharsPerLine) {
       currentLine = (currentLine + ' ' + word).trim();
     } else {
       if (currentLine) lines.push(currentLine);
-      currentLine = word;
+      currentLine = word.length > maxCharsPerLine ? word.substring(0, maxCharsPerLine - 2) + '..' : word;
     }
   });
   
   if (currentLine) lines.push(currentLine);
-  
   if (lines.length > 3) {
     lines.length = 3;
     lines[2] = lines[2].substring(0, maxCharsPerLine - 3) + '...';
@@ -585,7 +529,6 @@ function parseCSV(csvText) {
     });
     
     if (!row.Child) continue;
-    
     data.push(row);
   }
   
@@ -599,7 +542,6 @@ function parseCSVLine(line) {
   
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
@@ -610,65 +552,62 @@ function parseCSVLine(line) {
     }
   }
   result.push(current);
-  
   return result;
 }
 
 // ==================================================
-// CSV TO DAG - CORRECTED FLOW DIRECTION
-// Child goes INTO Parent (arrow: Child → Parent)
-// FINAL/ROOT marker = rightmost (highest depth)
+// CSV TO DAG - Build graph structure
 // ==================================================
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
   let finalNodeName = null;
   
-  // First pass: Create all nodes and identify relationships
+  // First pass: Create nodes and relationships
   csvData.forEach(row => {
     const childName = row.Child.trim();
     
     if (!nodes.has(childName)) {
       const partNumber = row.Part_Number || row.Part_Num || '';
       nodes.set(childName, {
+        id: childName,
         name: childName,
         partNumber: partNumber,
         status: row.Status || '',
         qty: parseInt(row.Qty) || 1,
         depth: -1,
-        goesInto: [],      // What this node goes INTO (targets)
-        receivesFrom: [],  // What goes INTO this node (sources)
+        goesInto: [],
+        receivesFrom: [],
         isOrphan: false,
         isFinal: false,
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0,
-        height: calculateNodeHeight(childName, partNumber)
+        height: calculateNodeHeight(childName, partNumber),
+        x: 0,
+        y: 0
       });
     }
     
-    // Parse parent (what this child goes INTO) - semicolon separated
     const parentStr = row.Parent || '';
     const parents = parentStr.split(';').map(p => p.trim()).filter(p => p);
     
     parents.forEach(parentName => {
       const parentUpper = parentName.toUpperCase();
       
-      // FINAL or ROOT marker = this node is the final assembly
       if (parentUpper === 'FINAL' || parentUpper === 'ROOT') {
         nodes.get(childName).isFinal = true;
         finalNodeName = childName;
         return;
       }
       
-      // NONE or ORPHAN = this node has no upstream connection
       if (parentUpper === 'NONE' || parentUpper === 'ORPHAN') {
         nodes.get(childName).isOrphan = true;
         return;
       }
       
-      // Create parent node if doesn't exist
       if (!nodes.has(parentName)) {
         nodes.set(parentName, {
+          id: parentName,
           name: parentName,
           partNumber: '',
           status: '',
@@ -680,20 +619,19 @@ function csvToDAG(csvData) {
           isFinal: false,
           fastener: '',
           fastenerQty: 0,
-          height: calculateNodeHeight(parentName, '')
+          height: calculateNodeHeight(parentName, ''),
+          x: 0,
+          y: 0
         });
       }
       
-      // Link: Child → Parent (child goes INTO parent)
-      // Visual: arrow from Child (left) to Parent (right)
       links.push({
-        source: childName,   // Child (left side)
-        target: parentName,  // Parent (right side)
+        source: childName,
+        target: parentName,
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0
       });
       
-      // Track relationships
       const childNode = nodes.get(childName);
       if (!childNode.goesInto.includes(parentName)) {
         childNode.goesInto.push(parentName);
@@ -706,12 +644,12 @@ function csvToDAG(csvData) {
     });
   });
   
-  // Mark nodes that receive from multiple sources
+  // Mark multi-input nodes
   nodes.forEach(node => {
     node.isMultiParent = node.receivesFrom.length > 1;
   });
   
-  // If no explicit FINAL marker, find the node that nothing goes INTO
+  // Find final node if not explicitly marked
   if (!finalNodeName) {
     for (const [name, node] of nodes) {
       if (node.goesInto.length === 0 && !node.isOrphan) {
@@ -727,17 +665,13 @@ function csvToDAG(csvData) {
     return null;
   }
   
-  // DEPTH CALCULATION: Start from FINAL (rightmost) and work backwards
-  // Final node = maxDepth, leaf nodes = 0
-  
-  // First, calculate max possible depth using BFS from final going backwards
-  let maxDepth = 0;
+  // Calculate depths using reverse BFS from final node
   const queue = [{ name: finalNodeName, depth: 0 }];
   const visited = new Set();
+  let maxDepth = 0;
   
   while (queue.length > 0) {
     const { name, depth } = queue.shift();
-    
     if (visited.has(name)) continue;
     visited.add(name);
     
@@ -746,7 +680,6 @@ function csvToDAG(csvData) {
       node.depth = depth;
       maxDepth = Math.max(maxDepth, depth);
       
-      // Go to nodes that feed INTO this one
       node.receivesFrom.forEach(sourceName => {
         if (!visited.has(sourceName)) {
           queue.push({ name: sourceName, depth: depth + 1 });
@@ -755,42 +688,21 @@ function csvToDAG(csvData) {
     }
   }
   
-  // Now reverse the depths so FINAL is at maxDepth (rightmost)
+  // Reverse depths so final is at max
   nodes.forEach(node => {
     if (node.depth !== -1) {
       node.depth = maxDepth - node.depth;
     }
   });
   
-  // Handle orphans: place them one level before what they go INTO
-  nodes.forEach(node => {
-    if (node.isOrphan && node.depth === -1) {
-      let minTargetDepth = Infinity;
-      
-      node.goesInto.forEach(targetName => {
-        const targetNode = nodes.get(targetName);
-        if (targetNode && targetNode.depth !== -1) {
-          minTargetDepth = Math.min(minTargetDepth, targetNode.depth);
-        }
-      });
-      
-      if (minTargetDepth !== Infinity) {
-        node.depth = minTargetDepth - 1;
-        if (node.depth < 0) node.depth = 0;
-      } else {
-        node.depth = 0; // Orphan with no connections goes to leftmost
-      }
-    }
-  });
-  
-  // Handle any remaining unvisited nodes
+  // Handle orphans - calculate based on what they go into
   nodes.forEach(node => {
     if (node.depth === -1) {
       let minTargetDepth = Infinity;
       node.goesInto.forEach(targetName => {
-        const targetNode = nodes.get(targetName);
-        if (targetNode && targetNode.depth !== -1) {
-          minTargetDepth = Math.min(minTargetDepth, targetNode.depth);
+        const target = nodes.get(targetName);
+        if (target && target.depth !== -1) {
+          minTargetDepth = Math.min(minTargetDepth, target.depth);
         }
       });
       
@@ -803,21 +715,14 @@ function csvToDAG(csvData) {
     }
   });
   
-  // Recalculate maxDepth after all adjustments
+  // Recalculate maxDepth
   maxDepth = 0;
   nodes.forEach(node => {
     maxDepth = Math.max(maxDepth, node.depth);
   });
   
-  // Convert to output format (rename for compatibility)
-  const outputNodes = Array.from(nodes.values()).map(node => ({
-    ...node,
-    children: node.goesInto,      // What this goes INTO (for collapse logic)
-    parents: node.receivesFrom    // What feeds INTO this (for visibility)
-  }));
-  
   return {
-    nodes: outputNodes,
+    nodes: Array.from(nodes.values()),
     links: links,
     finalName: finalNodeName,
     maxDepth: maxDepth
@@ -825,109 +730,23 @@ function csvToDAG(csvData) {
 }
 
 // ==================================================
-// VISIBILITY CALCULATION
+// VISIBILITY
 // ==================================================
-function isNodeVisible(nodeName, nodes, collapsedNodes) {
-  const nodesMap = new Map(nodes.map(n => [n.name, n]));
-  const node = nodesMap.get(nodeName);
-  
-  if (!node) return false;
-  
-  // Final assembly is always visible
+function isNodeVisible(node, collapsedNodes) {
   if (node.isFinal) return true;
+  if (node.goesInto.length === 0) return true;
   
-  // Orphans with no goesInto are always visible
-  if (node.isOrphan && node.goesInto.length === 0) return true;
-  
-  // Nodes with nothing feeding into them (leaf parts) are always visible
-  if (node.receivesFrom.length === 0 && !node.isFinal) return true;
-  
-  // Check if ANY target path leads to visible final assembly
-  function hasVisiblePath(currentName, visited = new Set()) {
-    if (visited.has(currentName)) return false;
-    visited.add(currentName);
-    
-    const current = nodesMap.get(currentName);
-    if (!current) return false;
-    
-    // If this is final, path is visible
-    if (current.isFinal) return true;
-    
-    // Check each target (what this goes INTO)
-    for (const targetName of current.goesInto) {
-      // If target is collapsed, check if target itself is visible
-      if (collapsedNodes.has(targetName)) {
-        // Target is collapsed, but we need to check if target is visible
-        const target = nodesMap.get(targetName);
-        if (target && hasVisiblePath(targetName, visited)) {
-          // Target is visible but collapsed, so we're hidden
-          continue;
-        }
-      } else {
-        // Target is not collapsed, check if it has visible path
-        if (hasVisiblePath(targetName, visited)) return true;
-      }
-    }
-    
-    return false;
-  }
-  
-  // A node is visible if it's not blocked by a collapsed node
-  // Check if all paths to final are blocked
+  // Check if any target is not collapsed
   for (const targetName of node.goesInto) {
     if (!collapsedNodes.has(targetName)) {
-      // At least one direct target is not collapsed
       return true;
     }
   }
-  
-  // All direct targets are collapsed - node is hidden
-  return node.goesInto.length === 0;
-}
-
-function isLinkFromCollapsedSource(link, collapsedNodes) {
-  // Link goes from source (child) to target (parent)
-  // If source is collapsed, show as faded
-  return collapsedNodes.has(link.source);
+  return false;
 }
 
 // ==================================================
-// NODE REORDERING TO MINIMIZE CROSSINGS
-// ==================================================
-function reorderNodesToMinimizeCrossings(nodesByDepth, nodes, links) {
-  const nodesMap = new Map(nodes.map(n => [n.name, n]));
-  
-  // Sort nodes at each depth by average Y position of their targets
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(b) - parseInt(a)).forEach(depth => {
-    const depthInt = parseInt(depth);
-    const depthNodes = nodesByDepth[depth];
-    
-    // Calculate score based on target (goesInto) positions
-    depthNodes.forEach(node => {
-      const targetPositions = [];
-      (node.goesInto || []).forEach(targetName => {
-        const target = nodesMap.get(targetName);
-        if (target && target.y !== undefined) {
-          targetPositions.push(target.y);
-        }
-      });
-      
-      if (targetPositions.length > 0) {
-        node.sortScore = targetPositions.reduce((a, b) => a + b, 0) / targetPositions.length;
-      } else {
-        node.sortScore = 0;
-      }
-    });
-    
-    // Sort by score
-    depthNodes.sort((a, b) => a.sortScore - b.sortScore);
-  });
-  
-  return nodesByDepth;
-}
-
-// ==================================================
-// LOAD DATA FROM GOOGLE SHEETS
+// LOAD DATA
 // ==================================================
 async function loadSheetData(tabConfig) {
   const url = getSheetUrl(tabConfig.gid);
@@ -938,9 +757,7 @@ async function loadSheetData(tabConfig) {
     
     const csvText = await response.text();
     const csvData = parseCSV(csvText);
-    const graphData = csvToDAG(csvData);
-    
-    return graphData;
+    return csvToDAG(csvData);
   } catch (error) {
     console.error(`Error loading ${tabConfig.name}:`, error);
     throw error;
@@ -975,8 +792,6 @@ async function loadAllSheets() {
       select.appendChild(option);
       
       if (!firstValidTab) firstValidTab = tab.name;
-    } else {
-      console.warn(`Could not load ${tab.name}:`, result.reason);
     }
   });
   
@@ -985,15 +800,16 @@ async function loadAllSheets() {
     select.value = firstValidTab;
     renderGraph(firstValidTab);
   } else {
-    setStatus('No valid data found. Check Google Sheet permissions.', 'error');
+    setStatus('No valid data found', 'error');
     document.getElementById('treeContainer').innerHTML = 
-      '<div class="message error">Could not load any sheets. Make sure your Google Sheet is published to web.<br><br>Go to: File → Share → Publish to web → Select CSV format → Publish</div>';
+      '<div class="message error">Could not load sheets. Check Google Sheet permissions.</div>';
   }
 }
 
 function refreshData() {
   loadedData = {};
   collapsedNodes.clear();
+  if (simulation) simulation.stop();
   loadAllSheets();
 }
 
@@ -1016,7 +832,7 @@ function collapseAll() {
 }
 
 // ==================================================
-// DRAW SVG SHAPE
+// DRAW SHAPE
 // ==================================================
 function drawShape(selection, shapeType, width, height, fill, stroke, statusStroke, isMultiParent, isOrphan) {
   const halfW = width / 2;
@@ -1026,15 +842,13 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
   const strokeWidth = (isMultiParent || isOrphan) ? 3 : 2;
   const dashArray = isOrphan ? '6,3' : 'none';
 
-  selection.selectAll('.node-shape, .multi-parent-indicator, .orphan-indicator').remove();
+  selection.selectAll('.node-shape, .multi-parent-indicator').remove();
 
   if (shapeType === "rectangle") {
     selection.insert('rect', ':first-child')
       .attr('class', 'node-shape')
-      .attr('x', -halfW)
-      .attr('y', -halfH)
-      .attr('width', width)
-      .attr('height', height)
+      .attr('x', -halfW).attr('y', -halfH)
+      .attr('width', width).attr('height', height)
       .attr('fill', fill)
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
@@ -1044,12 +858,9 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     if (isMultiParent) {
       selection.insert('rect', ':first-child')
         .attr('class', 'multi-parent-indicator')
-        .attr('x', -halfW - 4)
-        .attr('y', -halfH - 4)
-        .attr('width', width + 8)
-        .attr('height', height + 8)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('x', -halfW - 4).attr('y', -halfH - 4)
+        .attr('width', width + 8).attr('height', height + 8)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 2);
     }
@@ -1057,10 +868,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
   else if (shapeType === "rounded_rectangle") {
     selection.insert('rect', ':first-child')
       .attr('class', 'node-shape')
-      .attr('x', -halfW)
-      .attr('y', -halfH)
-      .attr('width', width)
-      .attr('height', height)
+      .attr('x', -halfW).attr('y', -halfH)
+      .attr('width', width).attr('height', height)
       .attr('fill', fill)
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
@@ -1070,54 +879,40 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     if (isMultiParent) {
       selection.insert('rect', ':first-child')
         .attr('class', 'multi-parent-indicator')
-        .attr('x', -halfW - 4)
-        .attr('y', -halfH - 4)
-        .attr('width', width + 8)
-        .attr('height', height + 8)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('x', -halfW - 4).attr('y', -halfH - 4)
+        .attr('width', width + 8).attr('height', height + 8)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 10);
     }
   }
   else if (shapeType === "stadium") {
-    // Stadium/Pill shape - fully rounded ends
     const radius = halfH;
     selection.insert('rect', ':first-child')
       .attr('class', 'node-shape')
-      .attr('x', -halfW)
-      .attr('y', -halfH)
-      .attr('width', width)
-      .attr('height', height)
+      .attr('x', -halfW).attr('y', -halfH)
+      .attr('width', width).attr('height', height)
       .attr('fill', fill)
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
       .attr('stroke-dasharray', dashArray)
-      .attr('rx', radius)
-      .attr('ry', radius);
+      .attr('rx', radius).attr('ry', radius);
     
     if (isMultiParent) {
       selection.insert('rect', ':first-child')
         .attr('class', 'multi-parent-indicator')
-        .attr('x', -halfW - 4)
-        .attr('y', -halfH - 4)
-        .attr('width', width + 8)
-        .attr('height', height + 8)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('x', -halfW - 4).attr('y', -halfH - 4)
+        .attr('width', width + 8).attr('height', height + 8)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
-        .attr('rx', radius + 4)
-        .attr('ry', radius + 4);
+        .attr('rx', radius + 4).attr('ry', radius + 4);
     }
   }
   else if (shapeType === "parallelogram") {
-    // Parallelogram shape
-    const skew = 15;
+    const skew = 12;
     const points = [
-      [-halfW + skew, -halfH],
-      [halfW + skew, -halfH],
-      [halfW - skew, halfH],
-      [-halfW - skew, halfH]
+      [-halfW + skew, -halfH], [halfW + skew, -halfH],
+      [halfW - skew, halfH], [-halfW - skew, halfH]
     ].map(p => p.join(',')).join(' ');
 
     selection.insert('polygon', ':first-child')
@@ -1130,32 +925,25 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     
     if (isMultiParent) {
       const outerPoints = [
-        [-halfW + skew - 2, -halfH - 4],
-        [halfW + skew + 4, -halfH - 4],
-        [halfW - skew + 2, halfH + 4],
-        [-halfW - skew - 4, halfH + 4]
+        [-halfW + skew - 2, -halfH - 4], [halfW + skew + 4, -halfH - 4],
+        [halfW - skew + 2, halfH + 4], [-halfW - skew - 4, halfH + 4]
       ].map(p => p.join(',')).join(' ');
       
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "pentagon") {
-    // Pentagon shape (5 sides)
     const angle = (2 * Math.PI) / 5;
-    const startAngle = -Math.PI / 2; // Start from top
-    const rx = halfW * 0.9;
-    const ry = halfH * 0.95;
+    const startAngle = -Math.PI / 2;
+    const rx = halfW * 0.85, ry = halfH * 0.9;
     
     const points = [];
     for (let i = 0; i < 5; i++) {
-      const x = rx * Math.cos(startAngle + i * angle);
-      const y = ry * Math.sin(startAngle + i * angle);
-      points.push(`${x},${y}`);
+      points.push(`${rx * Math.cos(startAngle + i * angle)},${ry * Math.sin(startAngle + i * angle)}`);
     }
 
     selection.insert('polygon', ':first-child')
@@ -1167,31 +955,24 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('stroke-dasharray', dashArray);
     
     if (isMultiParent) {
-      const outerRx = rx + 4;
-      const outerRy = ry + 4;
+      const outerRx = rx + 4, outerRy = ry + 4;
       const outerPoints = [];
       for (let i = 0; i < 5; i++) {
-        const x = outerRx * Math.cos(startAngle + i * angle);
-        const y = outerRy * Math.sin(startAngle + i * angle);
-        outerPoints.push(`${x},${y}`);
+        outerPoints.push(`${outerRx * Math.cos(startAngle + i * angle)},${outerRy * Math.sin(startAngle + i * angle)}`);
       }
       
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints.join(' '))
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "hexagon") {
     const points = [
-      [-halfW + 12, -halfH],
-      [halfW - 12, -halfH],
-      [halfW, 0],
-      [halfW - 12, halfH],
-      [-halfW + 12, halfH],
-      [-halfW, 0]
+      [-halfW + 10, -halfH], [halfW - 10, -halfH],
+      [halfW, 0], [halfW - 10, halfH],
+      [-halfW + 10, halfH], [-halfW, 0]
     ].map(p => p.join(',')).join(' ');
 
     selection.insert('polygon', ':first-child')
@@ -1204,29 +985,23 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     
     if (isMultiParent) {
       const outerPoints = [
-        [-halfW + 10, -halfH - 4],
-        [halfW - 10, -halfH - 4],
-        [halfW + 4, 0],
-        [halfW - 10, halfH + 4],
-        [-halfW + 10, halfH + 4],
-        [-halfW - 4, 0]
+        [-halfW + 8, -halfH - 4], [halfW - 8, -halfH - 4],
+        [halfW + 4, 0], [halfW - 8, halfH + 4],
+        [-halfW + 8, halfH + 4], [-halfW - 4, 0]
       ].map(p => p.join(',')).join(' ');
       
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "ellipse") {
     selection.insert('ellipse', ':first-child')
       .attr('class', 'node-shape')
-      .attr('cx', 0)
-      .attr('cy', 0)
-      .attr('rx', halfW)
-      .attr('ry', halfH)
+      .attr('cx', 0).attr('cy', 0)
+      .attr('rx', halfW).attr('ry', halfH)
       .attr('fill', fill)
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
@@ -1235,27 +1010,19 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     if (isMultiParent) {
       selection.insert('ellipse', ':first-child')
         .attr('class', 'multi-parent-indicator')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('rx', halfW + 4)
-        .attr('ry', halfH + 4)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('cx', 0).attr('cy', 0)
+        .attr('rx', halfW + 4).attr('ry', halfH + 4)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "octagon") {
-    // Octagon shape (stop sign)
-    const cut = Math.min(halfW, halfH) * 0.4;
+    const cut = Math.min(halfW, halfH) * 0.35;
     const points = [
-      [-halfW + cut, -halfH],
-      [halfW - cut, -halfH],
-      [halfW, -halfH + cut],
-      [halfW, halfH - cut],
-      [halfW - cut, halfH],
-      [-halfW + cut, halfH],
-      [-halfW, halfH - cut],
-      [-halfW, -halfH + cut]
+      [-halfW + cut, -halfH], [halfW - cut, -halfH],
+      [halfW, -halfH + cut], [halfW, halfH - cut],
+      [halfW - cut, halfH], [-halfW + cut, halfH],
+      [-halfW, halfH - cut], [-halfW, -halfH + cut]
     ].map(p => p.join(',')).join(' ');
 
     selection.insert('polygon', ':first-child')
@@ -1269,42 +1036,23 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
     if (isMultiParent) {
       const outerCut = cut + 2;
       const outerPoints = [
-        [-halfW - 2 + outerCut, -halfH - 4],
-        [halfW + 2 - outerCut, -halfH - 4],
-        [halfW + 4, -halfH - 2 + outerCut],
-        [halfW + 4, halfH + 2 - outerCut],
-        [halfW + 2 - outerCut, halfH + 4],
-        [-halfW - 2 + outerCut, halfH + 4],
-        [-halfW - 4, halfH + 2 - outerCut],
-        [-halfW - 4, -halfH - 2 + outerCut]
+        [-halfW - 2 + outerCut, -halfH - 4], [halfW + 2 - outerCut, -halfH - 4],
+        [halfW + 4, -halfH - 2 + outerCut], [halfW + 4, halfH + 2 - outerCut],
+        [halfW + 2 - outerCut, halfH + 4], [-halfW - 2 + outerCut, halfH + 4],
+        [-halfW - 4, halfH + 2 - outerCut], [-halfW - 4, -halfH - 2 + outerCut]
       ].map(p => p.join(',')).join(' ');
       
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c')
-        .attr('stroke-width', 2)
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
         .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
 }
 
 // ==================================================
-// CUSTOM CURVED LINK
-// ==================================================
-function createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor = 0.5) {
-  const midX = (sourceX + targetX) / 2;
-  const dy = targetY - sourceY;
-  
-  const controlOffset = Math.abs(dy) * curveFactor;
-  const controlX = midX;
-  const controlY = sourceY + (dy > 0 ? controlOffset : -controlOffset) * 0.3;
-  
-  return `M ${sourceX},${sourceY} Q ${controlX},${controlY} ${midX},${(sourceY + targetY) / 2} T ${targetX},${targetY}`;
-}
-
-// ==================================================
-// RENDER DAG
+// RENDER GRAPH WITH FORCE-DIRECTED LAYOUT
 // ==================================================
 function renderGraph(tabName) {
   const container = document.getElementById('treeContainer');
@@ -1312,80 +1060,39 @@ function renderGraph(tabName) {
   
   const graphData = loadedData[tabName];
   if (!graphData) {
-    console.error('No data for:', tabName);
-    container.innerHTML = '<div class="message error">No data available for this assembly.</div>';
+    container.innerHTML = '<div class="message error">No data available.</div>';
     return;
   }
 
   currentGraphData = graphData;
   
-  const svg = d3.select('#treeSvg');
+  if (simulation) simulation.stop();
+  
   const { nodes, links, finalName, maxDepth } = graphData;
   
   // Filter visible nodes
-  const visibleNodes = nodes.filter(node => isNodeVisible(node.name, nodes, collapsedNodes));
+  const visibleNodes = nodes.filter(n => isNodeVisible(n, collapsedNodes));
   const visibleNodeNames = new Set(visibleNodes.map(n => n.name));
+  const visibleLinks = links.filter(l => visibleNodeNames.has(l.source) && visibleNodeNames.has(l.target));
   
-  // Filter links
-  const visibleLinks = links.filter(link => 
-    visibleNodeNames.has(link.source) && visibleNodeNames.has(link.target)
-  );
+  // Create node map for links
+  const nodeMap = new Map(visibleNodes.map(n => [n.name, n]));
   
-  // Calculate layout dimensions
-  const margin = { top: 60, right: 200, bottom: 60, left: 120 };
+  // Convert links to use node references
+  const simLinks = visibleLinks.map(l => ({
+    source: nodeMap.get(l.source),
+    target: nodeMap.get(l.target),
+    fastener: l.fastener,
+    fastenerQty: l.fastenerQty
+  })).filter(l => l.source && l.target);
   
-  // Group nodes by depth
-  let nodesByDepth = {};
-  visibleNodes.forEach(node => {
-    if (!nodesByDepth[node.depth]) {
-      nodesByDepth[node.depth] = [];
-    }
-    nodesByDepth[node.depth].push(node);
-  });
+  // Calculate dimensions
+  const width = Math.max(1600, (maxDepth + 1) * 250 + 300);
+  const height = Math.max(900, visibleNodes.length * 60 + 200);
   
-  // Initial positioning (needed for reordering)
-  const nodePositions = new Map();
-  
-  // First pass: assign initial Y positions
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
-    const depthNodes = nodesByDepth[depth];
-    depthNodes.forEach((node, index) => {
-      node.y = index * NODE_VERTICAL_SPACING;
-    });
-  });
-  
-  // Reorder nodes to minimize crossings (process from right to left)
-  nodesByDepth = reorderNodesToMinimizeCrossings(nodesByDepth, visibleNodes, visibleLinks);
-  
-  const depthCount = maxDepth + 1;
-  const maxNodesInLevel = Math.max(...Object.values(nodesByDepth).map(arr => arr.length), 1);
-  
-  const width = Math.max(1400, depthCount * 280 + margin.left + margin.right);
-  const height = Math.max(800, maxNodesInLevel * NODE_VERTICAL_SPACING + margin.top + margin.bottom);
-  
-  svg.attr('width', width).attr('height', height);
-  
-  // Position nodes: depth 0 = leftmost, maxDepth = rightmost
-  Object.keys(nodesByDepth).sort((a, b) => parseInt(a) - parseInt(b)).forEach(depth => {
-    const depthNodes = nodesByDepth[depth];
-    const x = margin.left + parseInt(depth) * 250;
-    
-    let totalHeight = 0;
-    depthNodes.forEach(node => {
-      totalHeight += node.height + 30;
-    });
-    
-    let currentY = (height - totalHeight) / 2 + (depthNodes[0]?.height || 50) / 2;
-    
-    depthNodes.forEach((node) => {
-      node.x = x;
-      node.y = currentY;
-      nodePositions.set(node.name, { x: node.x, y: node.y, height: node.height });
-      currentY += node.height + 30;
-    });
-  });
-  
-  const g = svg.append('g').attr('class', 'main');
+  const svg = d3.select('#treeSvg')
+    .attr('width', width)
+    .attr('height', height);
   
   // Arrow markers
   const defs = svg.append('defs');
@@ -1393,7 +1100,7 @@ function renderGraph(tabName) {
   defs.append('marker')
     .attr('id', 'arrowhead')
     .attr('viewBox', '-0 -5 10 10')
-    .attr('refX', 8)
+    .attr('refX', 20)
     .attr('refY', 0)
     .attr('orient', 'auto')
     .attr('markerWidth', 6)
@@ -1402,102 +1109,75 @@ function renderGraph(tabName) {
     .attr('d', 'M 0,-5 L 10,0 L 0,5')
     .attr('fill', '#888');
   
-  defs.append('marker')
-    .attr('id', 'arrowhead-faded')
-    .attr('viewBox', '-0 -5 10 10')
-    .attr('refX', 8)
-    .attr('refY', 0)
-    .attr('orient', 'auto')
-    .attr('markerWidth', 6)
-    .attr('markerHeight', 6)
+  const g = svg.append('g').attr('class', 'main');
+  
+  // Initialize node positions based on depth
+  const depthSpacing = 220;
+  const margin = { left: 150, top: 100 };
+  
+  visibleNodes.forEach(node => {
+    node.x = margin.left + node.depth * depthSpacing;
+    node.y = height / 2 + (Math.random() - 0.5) * 200;
+  });
+  
+  // Force simulation
+  simulation = d3.forceSimulation(visibleNodes)
+    .force('link', d3.forceLink(simLinks)
+      .id(d => d.name)
+      .distance(180)
+      .strength(0.8))
+    .force('charge', d3.forceManyBody()
+      .strength(-400))
+    .force('collide', d3.forceCollide()
+      .radius(d => Math.max(NODE_WIDTH, d.height) / 2 + 20)
+      .strength(0.9))
+    .force('y', d3.forceY(height / 2).strength(0.05))
+    .force('x', d3.forceX(d => margin.left + d.depth * depthSpacing).strength(0.7))
+    .alphaDecay(0.02)
+    .velocityDecay(0.4);
+  
+  // Draw links
+  const linkElements = g.selectAll('.link')
+    .data(simLinks)
+    .enter()
     .append('path')
-    .attr('d', 'M 0,-5 L 10,0 L 0,5')
-    .attr('fill', '#ccc');
+    .attr('class', 'link')
+    .attr('stroke', d => getFastenerColor(d.fastener) || '#888')
+    .attr('stroke-width', 2)
+    .attr('marker-end', 'url(#arrowhead)');
   
-  // Track links per target for offset calculation
-  const linksPerTarget = new Map();
-  visibleLinks.forEach(link => {
-    if (!linksPerTarget.has(link.target)) {
-      linksPerTarget.set(link.target, []);
-    }
-    linksPerTarget.get(link.target).push(link);
-  });
-  
-  // Draw links (Child → Parent, left to right)
-  visibleLinks.forEach(link => {
-    const sourcePos = nodePositions.get(link.source); // Child (left)
-    const targetPos = nodePositions.get(link.target); // Parent (right)
-    
-    if (!sourcePos || !targetPos) return;
-    
-    const isCollapsed = isLinkFromCollapsedSource(link, collapsedNodes);
-    const fastenerColor = getFastenerColor(link.fastener);
-    const baseColor = fastenerColor || '#888';
-    
-    // Vary curvature for multiple links to same target
-    const targetLinks = linksPerTarget.get(link.target) || [];
-    const linkIndex = targetLinks.indexOf(link);
-    const totalLinks = targetLinks.length;
-    
-    let curveFactor = 0.5;
-    if (totalLinks > 1) {
-      curveFactor = 0.3 + (linkIndex / totalLinks) * 0.4;
-    }
-    
-    const sourceX = sourcePos.x + NODE_WIDTH / 2;  // Right edge of child
-    const sourceY = sourcePos.y;
-    const targetX = targetPos.x - NODE_WIDTH / 2;  // Left edge of parent
-    const targetY = targetPos.y;
-    
-    const pathD = createCurvedLink(sourceX, sourceY, targetX, targetY, curveFactor);
-    
-    g.append('path')
-      .attr('class', 'link')
-      .attr('d', pathD)
-      .attr('stroke', baseColor)
-      .attr('stroke-width', isCollapsed ? 1.5 : 2)
-      .attr('stroke-dasharray', isCollapsed ? '5,5' : 'none')
-      .attr('opacity', isCollapsed ? 0.3 : 1)
-      .attr('marker-end', isCollapsed ? 'url(#arrowhead-faded)' : 'url(#arrowhead)');
-    
-    // Fastener label
-    if (link.fastener && !isCollapsed) {
-      const midX = (sourceX + targetX) / 2;
-      const midY = (sourceY + targetY) / 2 - 8;
-      
-      g.append('text')
-        .attr('class', 'link-label')
-        .attr('x', midX)
-        .attr('y', midY)
-        .attr('text-anchor', 'middle')
-        .attr('fill', baseColor)
-        .text(link.fastenerQty ? `${link.fastener} ×${link.fastenerQty}` : link.fastener);
-    }
-  });
+  // Draw link labels
+  const linkLabels = g.selectAll('.link-label')
+    .data(simLinks.filter(l => l.fastener))
+    .enter()
+    .append('text')
+    .attr('class', 'link-label')
+    .attr('text-anchor', 'middle')
+    .attr('fill', d => getFastenerColor(d.fastener) || '#888')
+    .text(d => d.fastenerQty ? `${d.fastener} ×${d.fastenerQty}` : d.fastener);
   
   // Draw nodes
-  const nodeGroups = g.selectAll('.node')
+  const nodeElements = g.selectAll('.node')
     .data(visibleNodes)
     .enter()
     .append('g')
     .attr('class', 'node')
-    .attr('transform', d => `translate(${d.x}, ${d.y})`);
+    .call(d3.drag()
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended));
   
   // Add tooltip
-  nodeGroups.append('title')
+  nodeElements.append('title')
     .text(d => {
-      let tooltip = d.name;
-      if (d.partNumber) {
-        tooltip += `\nP/N: ${d.partNumber}`;
-      }
-      if (d.status) {
-        tooltip += `\nStatus: ${d.status}`;
-      }
-      return tooltip;
+      let tip = d.name;
+      if (d.partNumber) tip += `\nP/N: ${d.partNumber}`;
+      if (d.status) tip += `\nStatus: ${d.status}`;
+      return tip;
     });
   
   // Draw shapes
-  nodeGroups.each(function(d) {
+  nodeElements.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
     const defaultStroke = darkenColor(style.fill);
     const statusColor = getStatusColor(d.status);
@@ -1507,26 +1187,24 @@ function renderGraph(tabName) {
   });
   
   // Status indicator
-  nodeGroups.filter(d => d.status)
+  nodeElements.filter(d => d.status)
     .append('circle')
     .attr('class', 'status-indicator')
-    .attr('cx', -NODE_WIDTH / 2 + 12)
-    .attr('cy', d => -d.height / 2 + 12)
-    .attr('r', 7)
+    .attr('cx', -NODE_WIDTH / 2 + 10)
+    .attr('cy', d => -d.height / 2 + 10)
+    .attr('r', 6)
     .attr('fill', d => getStatusColor(d.status).fill)
     .attr('stroke', d => getStatusColor(d.status).stroke);
   
-  // Node labels (with word wrap)
-  nodeGroups.each(function(d) {
+  // Node labels
+  nodeElements.each(function(d) {
     const group = d3.select(this);
     const fontSize = getFontSize(d.depth, maxDepth);
-    const lines = wrapText(d.name, 18);
+    const lines = wrapText(d.name, 16);
     
     const lineHeight = fontSize + 2;
     const totalTextHeight = lines.length * lineHeight;
-    const startY = d.partNumber 
-      ? -totalTextHeight / 2 - 4
-      : -totalTextHeight / 2 + lineHeight / 2;
+    const startY = d.partNumber ? -totalTextHeight / 2 - 3 : -totalTextHeight / 2 + lineHeight / 2;
     
     lines.forEach((line, i) => {
       group.append('text')
@@ -1537,25 +1215,24 @@ function renderGraph(tabName) {
         .text(line);
     });
     
-    // Part number (small, less prominent)
     if (d.partNumber) {
       group.append('text')
         .attr('class', 'node-pn')
         .attr('text-anchor', 'middle')
-        .attr('y', startY + lines.length * lineHeight + 4)
-        .attr('font-size', '8px')
-        .text(d.partNumber.length > 20 ? d.partNumber.substring(0, 18) + '...' : d.partNumber);
+        .attr('y', startY + lines.length * lineHeight + 2)
+        .attr('font-size', '7px')
+        .text(d.partNumber.length > 18 ? d.partNumber.substring(0, 16) + '..' : d.partNumber);
     }
   });
   
-  // Collapse/expand indicator (on nodes that RECEIVE from others)
-  const nodesWithInputs = nodeGroups.filter(d => d.receivesFrom && d.receivesFrom.length > 0);
+  // Collapse indicators
+  const nodesWithInputs = nodeElements.filter(d => d.receivesFrom && d.receivesFrom.length > 0);
   
   nodesWithInputs.append('circle')
     .attr('class', 'collapse-indicator')
     .attr('cx', -NODE_WIDTH / 2 + 10)
-    .attr('cy', d => -d.height / 2 + 10)
-    .attr('r', 10)
+    .attr('cy', d => d.height / 2 - 10)
+    .attr('r', 8)
     .on('click', function(event, d) {
       event.stopPropagation();
       toggleCollapse(d.name);
@@ -1564,15 +1241,61 @@ function renderGraph(tabName) {
   nodesWithInputs.append('text')
     .attr('class', 'toggle-icon')
     .attr('x', -NODE_WIDTH / 2 + 10)
-    .attr('y', d => -d.height / 2 + 10)
+    .attr('y', d => d.height / 2 - 10)
     .attr('text-anchor', 'middle')
     .attr('dy', '0.35em')
-    .attr('font-size', '14px')
+    .attr('font-size', '12px')
     .text(d => collapsedNodes.has(d.name) ? '+' : '−')
     .on('click', function(event, d) {
       event.stopPropagation();
       toggleCollapse(d.name);
     });
+  
+  // Update positions on simulation tick
+  simulation.on('tick', () => {
+    // Keep nodes within bounds and constrain X by depth
+    visibleNodes.forEach(node => {
+      const targetX = margin.left + node.depth * depthSpacing;
+      node.x = node.x * 0.95 + targetX * 0.05; // Smooth constraint
+      node.x = Math.max(NODE_WIDTH / 2 + 20, Math.min(width - NODE_WIDTH / 2 - 20, node.x));
+      node.y = Math.max(node.height / 2 + 20, Math.min(height - node.height / 2 - 20, node.y));
+    });
+    
+    linkElements.attr('d', d => {
+      const sourceX = d.source.x + NODE_WIDTH / 2;
+      const sourceY = d.source.y;
+      const targetX = d.target.x - NODE_WIDTH / 2;
+      const targetY = d.target.y;
+      
+      const midX = (sourceX + targetX) / 2;
+      
+      return `M ${sourceX},${sourceY} C ${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`;
+    });
+    
+    linkLabels
+      .attr('x', d => (d.source.x + d.target.x) / 2)
+      .attr('y', d => (d.source.y + d.target.y) / 2 - 8);
+    
+    nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
+  });
+  
+  // Drag functions
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+  
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+  
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
 }
 
 function toggleCollapse(nodeName) {
@@ -1583,9 +1306,7 @@ function toggleCollapse(nodeName) {
   }
   
   const tabName = document.getElementById('fileSelect').value;
-  if (tabName) {
-    renderGraph(tabName);
-  }
+  if (tabName) renderGraph(tabName);
 }
 
 // ==================================================
