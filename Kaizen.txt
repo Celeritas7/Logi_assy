@@ -1,4 +1,8 @@
-Any other specific improvements you want to discuss? ACTUALLY. CAN I PLACE THE ORPHAN NODES SOMEWHERE HANGING IN FREE SPACE AND MAKE MY TREE DIAGRAM MORE LIKE A STAR SHAPED CONNECTIONS SO THAT THE SPACE WILL BE USED OPTIMALLY. THE NODE WITH MORE CONNECTIONS WILL MOVE AWAY FOR THE BETTER UI
+Lets have a discussion before coding, when I move any block it is retaininning its original position. Can you explain why this is happening?
+
+
+
+There is a fuctional problem with my tree. First of all the blocks which are initially free it push all of them to the left of screen. Can I make it more free. Plus 
 
 
 

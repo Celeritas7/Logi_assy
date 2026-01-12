@@ -24,7 +24,7 @@
       padding: 15px 30px;
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 20px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       flex-wrap: wrap;
     }
@@ -41,7 +41,7 @@
       border-radius: 4px;
       background: white;
       cursor: pointer;
-      min-width: 180px;
+      min-width: 200px;
     }
 
     .header label {
@@ -49,8 +49,8 @@
     }
 
     .header-btn {
-      padding: 8px 12px;
-      font-size: 13px;
+      padding: 8px 15px;
+      font-size: 14px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -63,30 +63,6 @@
       background: #2980b9;
     }
 
-    .header-btn.freeze-btn {
-      background: #9b59b6;
-    }
-
-    .header-btn.freeze-btn:hover {
-      background: #8e44ad;
-    }
-
-    .header-btn.download-btn {
-      background: #27ae60;
-    }
-
-    .header-btn.download-btn:hover {
-      background: #1e8449;
-    }
-
-    .header-btn.reset-btn {
-      background: #e74c3c;
-    }
-
-    .header-btn.reset-btn:hover {
-      background: #c0392b;
-    }
-
     .loading {
       color: #f39c12;
       font-size: 14px;
@@ -94,11 +70,6 @@
 
     .error {
       color: #e74c3c;
-      font-size: 14px;
-    }
-
-    .success {
-      color: #27ae60;
       font-size: 14px;
     }
 
@@ -114,7 +85,7 @@
 
     .legend-section {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -122,49 +93,49 @@
     .legend-title {
       font-weight: 600;
       color: #333;
-      font-size: 11px;
+      font-size: 12px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 4px;
-      font-size: 9px;
+      gap: 5px;
+      font-size: 10px;
       color: #555;
     }
 
     .legend-shape {
-      width: 20px;
-      height: 14px;
+      width: 24px;
+      height: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .legend-color {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
       border: 1px solid rgba(0,0,0,0.2);
     }
 
     .legend-status {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       border: 2px solid;
     }
 
     .legend-divider {
       width: 1px;
-      height: 25px;
+      height: 30px;
       background: #ddd;
-      margin: 0 3px;
+      margin: 0 5px;
     }
 
     .tree-container {
       width: 100%;
-      height: calc(100vh - 130px);
+      height: calc(100vh - 140px);
       overflow: auto;
       background: white;
     }
@@ -174,11 +145,7 @@
     }
 
     .node {
-      cursor: grab;
-    }
-
-    .node:active {
-      cursor: grabbing;
+      cursor: pointer;
     }
 
     .node-shape {
@@ -263,13 +230,19 @@
       display: none;
     }
 
-    /* Position source indicator */
-    .position-source {
-      background: #2c3e50;
-      color: #aaa;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
+    /* Lock indicator on nodes */
+    .lock-indicator {
+      cursor: pointer;
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .lock-indicator:hover {
+      opacity: 0.7;
+    }
+
+    .locked-node .node-shape {
+      stroke-width: 3px;
     }
 
     /* Mobile styles */
@@ -284,49 +257,19 @@
       
       .header {
         padding: 10px 15px;
-        gap: 10px;
       }
       
       .header h1 {
-        font-size: 14px;
-        width: 100%;
-      }
-      
-      .header select {
-        min-width: 140px;
-        font-size: 12px;
-        padding: 6px 10px;
-      }
-      
-      .header-btn {
-        padding: 6px 10px;
-        font-size: 11px;
+        font-size: 16px;
       }
       
       .legend {
-        padding: 6px 10px;
-        gap: 8px;
-      }
-      
-      .legend-title {
+        padding: 8px 10px;
         font-size: 9px;
       }
       
       .legend-item {
         font-size: 8px;
-      }
-      
-      .legend-shape {
-        width: 16px;
-        height: 12px;
-      }
-      
-      .tree-container {
-        height: calc(100vh - 110px);
-      }
-      
-      .node {
-        cursor: default;
       }
     }
   </style>
@@ -335,69 +278,68 @@
 
 <div class="header">
   <h1>🔧 Assembly Tree Viewer</h1>
-  <label for="fileSelect">Assembly:</label>
+  <label for="fileSelect">Select Assembly:</label>
   <select id="fileSelect">
     <option value="">Loading...</option>
   </select>
   <button class="header-btn" onclick="refreshData()">🔄 Refresh</button>
-  <button class="header-btn" onclick="expandAll()">➕ Expand</button>
-  <button class="header-btn" onclick="collapseAll()">➖ Collapse</button>
-  <button class="header-btn freeze-btn desktop-only" onclick="freezeLayout()">❄️ Freeze</button>
-  <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️ Download JSON</button>
-  <button class="header-btn reset-btn desktop-only" onclick="resetLayout()">↺ Reset</button>
+  <button class="header-btn" onclick="expandAll()">➕ Expand All</button>
+  <button class="header-btn" onclick="collapseAll()">➖ Collapse All</button>
+  <button class="header-btn desktop-only" onclick="lockAll()">🔒 Lock All</button>
+  <button class="header-btn desktop-only" onclick="unlockAll()">🔓 Unlock All</button>
+  <button class="header-btn desktop-only" onclick="resetPositions()">↺ Reset</button>
   <span id="statusIndicator" class="loading"></span>
-  <span id="positionSource" class="position-source"></span>
-  <span id="mobileIndicator" class="mobile-badge">📱 View Only</span>
+  <span id="mobileIndicator" class="mobile-badge"></span>
 </div>
 
 <div class="legend">
   <div class="legend-section">
     <span class="legend-title">Shapes:</span>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <rect x="1" y="1" width="18" height="12" fill="#e8e8e8" stroke="#999" stroke-width="1" rx="0"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#f5f5f5" stroke="#ababab" stroke-width="1.5" rx="0"/>
       </svg>
       <span>Part</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <rect x="1" y="1" width="18" height="12" fill="#ffcdd2" stroke="#b71c1c" stroke-width="1" rx="3"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#fee8e8" stroke="#b2a2a2" stroke-width="1.5" rx="3"/>
       </svg>
       <span>Minor</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <polygon points="10,1 18,5 15,13 5,13 2,5" fill="#ffe0b2" stroke="#e65100" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <polygon points="12,1 22,5 19,15 5,15 2,5" fill="#fce4d6" stroke="#c9a88c" stroke-width="1.5"/>
       </svg>
       <span>L4</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <rect x="1" y="1" width="18" height="12" fill="#fff9c4" stroke="#f9a825" stroke-width="1" rx="6"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="1" y="1" width="22" height="14" fill="#fff2cc" stroke="#d4b85c" stroke-width="1.5" rx="7"/>
       </svg>
       <span>L3</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <polygon points="4,1 18,1 16,13 2,13" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <polygon points="5,1 21,1 19,15 3,15" fill="#d9ead3" stroke="#8faa82" stroke-width="1.5"/>
       </svg>
       <span>L2</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <polygon points="3,1 17,1 20,7 17,13 3,13 0,7" fill="#b3e5fc" stroke="#0277bd" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <polygon points="4,1 20,1 24,8 20,15 4,15 0,8" fill="#d0e0e3" stroke="#8fadb2" stroke-width="1.5"/>
       </svg>
       <span>Sub</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <ellipse cx="10" cy="7" rx="9" ry="6" fill="#e1bee7" stroke="#7b1fa2" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <ellipse cx="12" cy="8" rx="11" ry="7" fill="#f3e9cf" stroke="#aaa391" stroke-width="1.5"/>
       </svg>
       <span>Major</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <polygon points="5,1 15,1 19,4 19,10 15,13 5,13 1,10 1,4" fill="#a5d6a7" stroke="#388e3c" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <polygon points="6,1 18,1 23,4 23,12 18,15 6,15 1,12 1,4" fill="#b6d7a8" stroke="#7f9675" stroke-width="1.5"/>
       </svg>
       <span>Final</span>
     </div>
@@ -408,14 +350,15 @@
   <div class="legend-section">
     <span class="legend-title">Special:</span>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <rect x="2" y="2" width="16" height="10" fill="#fee" stroke="#e74c3c" stroke-width="2" rx="2"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="2" y="2" width="20" height="12" fill="#fee8e8" stroke="#e74c3c" stroke-width="2" rx="2"/>
+        <rect x="4" y="4" width="16" height="8" fill="none" stroke="#e74c3c" stroke-width="1" rx="1"/>
       </svg>
-      <span>Multi-in</span>
+      <span>Multi-input</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 20 14">
-        <rect x="2" y="2" width="16" height="10" fill="#fee" stroke="#9b59b6" stroke-width="2" stroke-dasharray="2,1" rx="2"/>
+      <svg class="legend-shape" viewBox="0 0 24 16">
+        <rect x="2" y="2" width="20" height="12" fill="#fee8e8" stroke="#9b59b6" stroke-width="2" stroke-dasharray="3,2" rx="2"/>
       </svg>
       <span>Orphan</span>
     </div>
@@ -431,7 +374,11 @@
     </div>
     <div class="legend-item">
       <div class="legend-status" style="background: #f1c40f; border-color: #d4ac0d;"></div>
-      <span>WIP</span>
+      <span>In Progress</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-status" style="background: #bdc3c7; border-color: #95a5a6;"></div>
+      <span>Not Started</span>
     </div>
     <div class="legend-item">
       <div class="legend-status" style="background: #e74c3c; border-color: #c0392b;"></div>
@@ -472,13 +419,9 @@
 
 <script>
 // ==================================================
-// CONFIGURATION
+// GOOGLE SHEET CONFIGURATION
 // ==================================================
 const GOOGLE_SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
-
-// GitHub raw URL for positions JSON files
-// UPDATE THIS to your GitHub repo!
-const POSITIONS_BASE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/positions/";
 
 const SHEET_TABS = [
   { name: "Logi_base_L1", gid: "1604202891" },
@@ -491,11 +434,6 @@ const SHEET_TABS = [
 
 function getSheetUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}`;
-}
-
-function getPositionsUrl(tabName) {
-  const fileName = tabName.replace(/\s+/g, '_') + '.json';
-  return POSITIONS_BASE_URL + fileName;
 }
 
 // ==================================================
@@ -544,21 +482,22 @@ function getFastenerColor(fastener) {
 
 // ==================================================
 // STYLE CONFIGURATION - 8 levels with unique colors
+// Level 0 (leftmost) = Parts, Level 7 (rightmost) = Final Assembly
 // ==================================================
 const STYLE_SCALE = [
-  { shape: "rectangle",         fill: "#e8e8e8" },  // 0 - Parts
-  { shape: "rounded_rectangle", fill: "#ffcdd2" },  // 1 - Minor
-  { shape: "pentagon",          fill: "#ffe0b2" },  // 2 - L4
-  { shape: "stadium",           fill: "#fff9c4" },  // 3 - L3
-  { shape: "parallelogram",     fill: "#c8e6c9" },  // 4 - L2
-  { shape: "hexagon",           fill: "#b3e5fc" },  // 5 - Sub
-  { shape: "ellipse",           fill: "#e1bee7" },  // 6 - Major
-  { shape: "octagon",           fill: "#a5d6a7" },  // 7 - Final
+  { shape: "rectangle",         fill: "#e8e8e8" },  // 0 - Parts (gray)
+  { shape: "rounded_rectangle", fill: "#ffcdd2" },  // 1 - Minor Assy (light red)
+  { shape: "pentagon",          fill: "#ffe0b2" },  // 2 - Sub-sub-sub-sub Assy (light orange)
+  { shape: "stadium",           fill: "#fff9c4" },  // 3 - Sub-sub-sub Assy (light yellow)
+  { shape: "parallelogram",     fill: "#c8e6c9" },  // 4 - Sub-sub Assy (light green)
+  { shape: "hexagon",           fill: "#b3e5fc" },  // 5 - Sub Assy (light blue)
+  { shape: "ellipse",           fill: "#e1bee7" },  // 6 - Major Assy (light purple)
+  { shape: "octagon",           fill: "#a5d6a7" },  // 7 - Final Assy (green)
 ];
 
 // Random color palette for unique node colors
 const NODE_COLOR_PALETTE = [
-  "#ffcdd2", "#f8bbd0", "#e1bee7", "#d1c4e9", "#c5cae9",
+  "#ffcdd2", "#f8bbd9", "#e1bee7", "#d1c4e9", "#c5cae9",
   "#bbdefb", "#b3e5fc", "#b2ebf2", "#b2dfdb", "#c8e6c9",
   "#dcedc8", "#f0f4c3", "#fff9c4", "#ffecb3", "#ffe0b2",
   "#ffccbc", "#d7ccc8", "#cfd8dc", "#fce4ec", "#f3e5f5",
@@ -567,12 +506,14 @@ const NODE_COLOR_PALETTE = [
   "#fff8e1", "#fff3e0", "#fbe9e7", "#efebe9", "#eceff1"
 ];
 
+// Store assigned colors per node for consistency
 const nodeColorMap = new Map();
 
 function getRandomNodeColor(nodeName) {
   if (nodeColorMap.has(nodeName)) {
     return nodeColorMap.get(nodeName);
   }
+  // Use hash of node name for consistent color assignment
   let hash = 0;
   for (let i = 0; i < nodeName.length; i++) {
     hash = ((hash << 5) - hash) + nodeName.charCodeAt(i);
@@ -584,8 +525,9 @@ function getRandomNodeColor(nodeName) {
   return color;
 }
 
-const FONT_SIZES = [10, 10, 11, 11, 12, 12, 13, 14];
-const NODE_WIDTH = 130;
+const FONT_SIZES = [10, 11, 11, 12, 12, 13, 14, 15];
+const NODE_WIDTH = 140;
+const NODE_HEIGHT_BASE = 50;
 
 // ==================================================
 // GLOBAL STATE
@@ -593,163 +535,58 @@ const NODE_WIDTH = 130;
 let loadedData = {};
 let currentGraphData = null;
 let collapsedNodes = new Set();
+let lockedNodes = new Set();
 let simulation = null;
 let currentTabName = '';
-let positionSource = 'none'; // 'github', 'local', 'simulation'
-let isFrozen = false;
 
 // Mobile detection
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
   || window.innerWidth < 768;
 
-// LocalStorage key
+// LocalStorage keys
 const STORAGE_PREFIX = 'assembly_tree_';
 
 function getStorageKey(tabName) {
   return STORAGE_PREFIX + tabName.replace(/\s+/g, '_');
 }
 
-// ==================================================
-// POSITION MANAGEMENT
-// ==================================================
-
-// Save to localStorage
-function saveToLocalStorage(tabName, nodes) {
+function savePositions(tabName, nodes) {
+  if (isMobile) return; // Don't save from mobile
+  
   const positions = {};
   nodes.forEach(node => {
-    positions[node.name] = { x: node.x, y: node.y };
+    positions[node.name] = {
+      x: node.x,
+      y: node.y,
+      locked: lockedNodes.has(node.name)
+    };
   });
   
-  const data = {
-    tabName: tabName,
-    savedAt: new Date().toISOString(),
-    positions: positions
-  };
-  
   try {
-    localStorage.setItem(getStorageKey(tabName), JSON.stringify(data));
+    localStorage.setItem(getStorageKey(tabName), JSON.stringify(positions));
   } catch (e) {
-    console.warn('Could not save to localStorage:', e);
+    console.warn('Could not save positions to localStorage:', e);
   }
 }
 
-// Load from localStorage
-function loadFromLocalStorage(tabName) {
+function loadPositions(tabName) {
   try {
     const saved = localStorage.getItem(getStorageKey(tabName));
     if (saved) {
       return JSON.parse(saved);
     }
   } catch (e) {
-    console.warn('Could not load from localStorage:', e);
+    console.warn('Could not load positions from localStorage:', e);
   }
   return null;
 }
 
-// Clear localStorage
-function clearLocalStorage(tabName) {
+function clearPositions(tabName) {
   try {
     localStorage.removeItem(getStorageKey(tabName));
   } catch (e) {
-    console.warn('Could not clear localStorage:', e);
+    console.warn('Could not clear positions from localStorage:', e);
   }
-}
-
-// Load from GitHub
-async function loadFromGitHub(tabName) {
-  try {
-    const url = getPositionsUrl(tabName);
-    const response = await fetch(url);
-    if (response.ok) {
-      const data = await response.json();
-      return data;
-    }
-  } catch (e) {
-    console.log('No GitHub positions found for:', tabName);
-  }
-  return null;
-}
-
-// Download positions as JSON
-function downloadPositions() {
-  if (!currentGraphData || !currentTabName) {
-    setStatus('No data to download', 'error');
-    return;
-  }
-  
-  const positions = {};
-  currentGraphData.nodes.forEach(node => {
-    positions[node.name] = { x: Math.round(node.x), y: Math.round(node.y) };
-  });
-  
-  const data = {
-    tabName: currentTabName,
-    savedAt: new Date().toISOString(),
-    positions: positions
-  };
-  
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = currentTabName.replace(/\s+/g, '_') + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  setStatus('JSON downloaded!', 'success');
-  setTimeout(() => setStatus(''), 2000);
-}
-
-// Freeze current layout
-function freezeLayout() {
-  if (!currentGraphData) return;
-  
-  // Fix all nodes in place
-  currentGraphData.nodes.forEach(node => {
-    node.fx = node.x;
-    node.fy = node.y;
-  });
-  
-  // Stop simulation
-  if (simulation) {
-    simulation.stop();
-  }
-  
-  // Save to localStorage
-  saveToLocalStorage(currentTabName, currentGraphData.nodes);
-  
-  isFrozen = true;
-  setStatus('Layout frozen! Click Download to save.', 'success');
-  updatePositionSource('local (frozen)');
-}
-
-// Reset layout
-function resetLayout() {
-  if (!currentTabName) return;
-  
-  // Clear localStorage
-  clearLocalStorage(currentTabName);
-  
-  // Reset node positions
-  if (currentGraphData) {
-    currentGraphData.nodes.forEach(node => {
-      node.fx = null;
-      node.fy = null;
-      node.x = undefined;
-      node.y = undefined;
-    });
-  }
-  
-  isFrozen = false;
-  positionSource = 'simulation';
-  
-  // Re-render
-  renderGraph(currentTabName);
-  
-  setStatus('Layout reset!', 'success');
-  setTimeout(() => setStatus(''), 2000);
 }
 
 // ==================================================
@@ -786,20 +623,10 @@ function setStatus(msg, type = 'loading') {
   el.className = type;
 }
 
-function updatePositionSource(source) {
-  const el = document.getElementById('positionSource');
-  if (source) {
-    el.textContent = '📍 ' + source;
-    el.style.display = 'inline-block';
-  } else {
-    el.style.display = 'none';
-  }
-}
-
 function calculateNodeHeight(name, partNumber) {
-  const maxCharsPerLine = 15;
+  const maxCharsPerLine = 16;
   const nameLines = Math.ceil(name.length / maxCharsPerLine);
-  let height = nameLines <= 1 ? 42 : (nameLines === 2 ? 52 : 62);
+  let height = nameLines <= 1 ? 45 : (nameLines === 2 ? 55 : 65);
   if (partNumber) height += 10;
   return height;
 }
@@ -874,13 +701,14 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO DAG
+// CSV TO DAG - Build graph structure
 // ==================================================
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
   let finalNodeName = null;
   
+  // First pass: Create nodes and relationships
   csvData.forEach(row => {
     const childName = row.Child.trim();
     
@@ -961,10 +789,12 @@ function csvToDAG(csvData) {
     });
   });
   
+  // Mark multi-input nodes
   nodes.forEach(node => {
     node.isMultiParent = node.receivesFrom.length > 1;
   });
   
+  // Find final node if not explicitly marked
   if (!finalNodeName) {
     for (const [name, node] of nodes) {
       if (node.goesInto.length === 0 && !node.isOrphan) {
@@ -980,7 +810,7 @@ function csvToDAG(csvData) {
     return null;
   }
   
-  // Calculate depths
+  // Calculate depths using reverse BFS from final node
   const queue = [{ name: finalNodeName, depth: 0 }];
   const visited = new Set();
   let maxDepth = 0;
@@ -1003,12 +833,14 @@ function csvToDAG(csvData) {
     }
   }
   
+  // Reverse depths so final is at max
   nodes.forEach(node => {
     if (node.depth !== -1) {
       node.depth = maxDepth - node.depth;
     }
   });
   
+  // Handle orphans - calculate based on what they go into
   nodes.forEach(node => {
     if (node.depth === -1) {
       let minTargetDepth = Infinity;
@@ -1028,6 +860,7 @@ function csvToDAG(csvData) {
     }
   });
   
+  // Recalculate maxDepth
   maxDepth = 0;
   nodes.forEach(node => {
     maxDepth = Math.max(maxDepth, node.depth);
@@ -1048,6 +881,7 @@ function isNodeVisible(node, collapsedNodes) {
   if (node.isFinal) return true;
   if (node.goesInto.length === 0) return true;
   
+  // Check if any target is not collapsed
   for (const targetName of node.goesInto) {
     if (!collapsedNodes.has(targetName)) {
       return true;
@@ -1112,6 +946,8 @@ async function loadAllSheets() {
     renderGraph(firstValidTab);
   } else {
     setStatus('No valid data found', 'error');
+    document.getElementById('treeContainer').innerHTML = 
+      '<div class="message error">Could not load sheets. Check Google Sheet permissions.</div>';
   }
 }
 
@@ -1124,7 +960,9 @@ function refreshData() {
 
 function expandAll() {
   collapsedNodes.clear();
-  if (currentGraphData) renderGraph(currentTabName);
+  if (currentGraphData) {
+    renderGraph(document.getElementById('fileSelect').value);
+  }
 }
 
 function collapseAll() {
@@ -1134,7 +972,7 @@ function collapseAll() {
         collapsedNodes.add(node.name);
       }
     });
-    renderGraph(currentTabName);
+    renderGraph(document.getElementById('fileSelect').value);
   }
 }
 
@@ -1168,6 +1006,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('x', -halfW - 4).attr('y', -halfH - 4)
         .attr('width', width + 8).attr('height', height + 8)
         .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', 2);
     }
   }
@@ -1180,7 +1019,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       .attr('stroke', isOrphan ? '#9b59b6' : finalStroke)
       .attr('stroke-width', strokeWidth)
       .attr('stroke-dasharray', dashArray)
-      .attr('rx', 6);
+      .attr('rx', 8);
     
     if (isMultiParent) {
       selection.insert('rect', ':first-child')
@@ -1188,7 +1027,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('x', -halfW - 4).attr('y', -halfH - 4)
         .attr('width', width + 8).attr('height', height + 8)
         .attr('stroke', '#e74c3c').attr('stroke-width', 2)
-        .attr('rx', 8);
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
+        .attr('rx', 10);
     }
   }
   else if (shapeType === "stadium") {
@@ -1209,11 +1049,12 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('x', -halfW - 4).attr('y', -halfH - 4)
         .attr('width', width + 8).attr('height', height + 8)
         .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none')
         .attr('rx', radius + 4).attr('ry', radius + 4);
     }
   }
   else if (shapeType === "parallelogram") {
-    const skew = 10;
+    const skew = 12;
     const points = [
       [-halfW + skew, -halfH], [halfW + skew, -halfH],
       [halfW - skew, halfH], [-halfW - skew, halfH]
@@ -1236,7 +1077,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c').attr('stroke-width', 2);
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "pentagon") {
@@ -1267,7 +1109,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints.join(' '))
-        .attr('stroke', '#e74c3c').attr('stroke-width', 2);
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "hexagon") {
@@ -1295,7 +1138,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c').attr('stroke-width', 2);
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "ellipse") {
@@ -1313,7 +1157,8 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
         .attr('class', 'multi-parent-indicator')
         .attr('cx', 0).attr('cy', 0)
         .attr('rx', halfW + 4).attr('ry', halfH + 4)
-        .attr('stroke', '#e74c3c').attr('stroke-width', 2);
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
   else if (shapeType === "octagon") {
@@ -1345,15 +1190,16 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
       selection.insert('polygon', ':first-child')
         .attr('class', 'multi-parent-indicator')
         .attr('points', outerPoints)
-        .attr('stroke', '#e74c3c').attr('stroke-width', 2);
+        .attr('stroke', '#e74c3c').attr('stroke-width', 2)
+        .attr('stroke-dasharray', isOrphan ? '6,3' : 'none');
     }
   }
 }
 
 // ==================================================
-// RENDER GRAPH
+// RENDER GRAPH WITH FORCE-DIRECTED LAYOUT
 // ==================================================
-async function renderGraph(tabName) {
+function renderGraph(tabName) {
   const container = document.getElementById('treeContainer');
   container.innerHTML = '<svg id="treeSvg"></svg>';
   
@@ -1365,11 +1211,15 @@ async function renderGraph(tabName) {
 
   currentGraphData = graphData;
   currentTabName = tabName;
-  isFrozen = false;
   
   // Show mobile indicator
   const mobileIndicator = document.getElementById('mobileIndicator');
-  mobileIndicator.style.display = isMobile ? 'inline-block' : 'none';
+  if (isMobile) {
+    mobileIndicator.textContent = '📱 View Only';
+    mobileIndicator.style.display = 'inline-block';
+  } else {
+    mobileIndicator.style.display = 'none';
+  }
   
   if (simulation) simulation.stop();
   
@@ -1380,8 +1230,10 @@ async function renderGraph(tabName) {
   const visibleNodeNames = new Set(visibleNodes.map(n => n.name));
   const visibleLinks = links.filter(l => visibleNodeNames.has(l.source) && visibleNodeNames.has(l.target));
   
+  // Create node map for links
   const nodeMap = new Map(visibleNodes.map(n => [n.name, n]));
   
+  // Convert links to use node references
   const simLinks = visibleLinks.map(l => ({
     source: nodeMap.get(l.source),
     target: nodeMap.get(l.target),
@@ -1390,19 +1242,20 @@ async function renderGraph(tabName) {
   })).filter(l => l.source && l.target);
   
   // Calculate dimensions
-  const width = Math.max(1600, (maxDepth + 1) * 220 + 300);
-  const height = Math.max(800, visibleNodes.length * 55 + 200);
+  const width = Math.max(1600, (maxDepth + 1) * 250 + 300);
+  const height = Math.max(900, visibleNodes.length * 60 + 200);
   
   const svg = d3.select('#treeSvg')
     .attr('width', width)
     .attr('height', height);
   
+  // Arrow markers
   const defs = svg.append('defs');
   
   defs.append('marker')
     .attr('id', 'arrowhead')
     .attr('viewBox', '-0 -5 10 10')
-    .attr('refX', 18)
+    .attr('refX', 20)
     .attr('refY', 0)
     .attr('orient', 'auto')
     .attr('markerWidth', 6)
@@ -1413,73 +1266,51 @@ async function renderGraph(tabName) {
   
   const g = svg.append('g').attr('class', 'main');
   
-  // Load positions - priority: GitHub > localStorage > simulation
-  const depthSpacing = 200;
-  const margin = { left: 120, top: 80 };
+  // Initialize node positions
+  const depthSpacing = 220;
+  const margin = { left: 150, top: 100 };
   
-  let savedPositions = null;
-  let useSimulation = true;
+  // Load saved positions
+  const savedPositions = loadPositions(tabName);
   
-  // Try GitHub first
-  setStatus('Loading positions...');
-  const githubPositions = await loadFromGitHub(tabName);
-  if (githubPositions && githubPositions.positions) {
-    savedPositions = githubPositions.positions;
-    positionSource = 'github';
-    useSimulation = false;
-  } else {
-    // Try localStorage
-    const localData = loadFromLocalStorage(tabName);
-    if (localData && localData.positions) {
-      savedPositions = localData.positions;
-      positionSource = 'local';
-      useSimulation = false;
-    } else {
-      positionSource = 'auto-layout';
-      useSimulation = true;
-    }
-  }
-  
-  setStatus('');
-  updatePositionSource(positionSource);
-  
-  // Initialize positions
   visibleNodes.forEach(node => {
     if (savedPositions && savedPositions[node.name]) {
+      // Restore saved position
       node.x = savedPositions[node.name].x;
       node.y = savedPositions[node.name].y;
-      node.fx = node.x;
-      node.fy = node.y;
-    } else {
-      node.x = margin.left + node.depth * depthSpacing;
-      node.y = height / 2 + (Math.random() - 0.5) * 300;
-      if (!useSimulation) {
+      if (savedPositions[node.name].locked) {
+        lockedNodes.add(node.name);
         node.fx = node.x;
         node.fy = node.y;
       }
+    } else {
+      // Default position based on depth
+      node.x = margin.left + node.depth * depthSpacing;
+      node.y = height / 2 + (Math.random() - 0.5) * 200;
+    }
+    
+    // Apply existing locks
+    if (lockedNodes.has(node.name)) {
+      node.fx = node.x;
+      node.fy = node.y;
     }
   });
   
-  // Create simulation
+  // Force simulation
   simulation = d3.forceSimulation(visibleNodes)
     .force('link', d3.forceLink(simLinks)
       .id(d => d.name)
-      .distance(160)
-      .strength(0.3))
-    .force('charge', d3.forceManyBody()
-      .strength(-300))
-    .force('collide', d3.forceCollide()
-      .radius(d => Math.max(NODE_WIDTH, d.height) / 2 + 15)
+      .distance(180)
       .strength(0.8))
-    .alphaDecay(0.03)
+    .force('charge', d3.forceManyBody()
+      .strength(-400))
+    .force('collide', d3.forceCollide()
+      .radius(d => Math.max(NODE_WIDTH, d.height) / 2 + 20)
+      .strength(0.9))
+    .force('y', d3.forceY(height / 2).strength(0.05))
+    .force('x', d3.forceX(d => margin.left + d.depth * depthSpacing).strength(0.7))
+    .alphaDecay(0.02)
     .velocityDecay(0.4);
-  
-  // Only add positioning forces if using simulation
-  if (useSimulation) {
-    simulation
-      .force('y', d3.forceY(height / 2).strength(0.02))
-      .force('x', d3.forceX(d => margin.left + d.depth * depthSpacing).strength(0.3));
-  }
   
   // Draw links
   const linkElements = g.selectAll('.link')
@@ -1487,7 +1318,7 @@ async function renderGraph(tabName) {
     .enter()
     .append('path')
     .attr('class', 'link')
-    .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
+    .attr('stroke', d => getFastenerColor(d.fastener) || '#888')
     .attr('stroke-width', 2)
     .attr('marker-end', 'url(#arrowhead)');
   
@@ -1498,17 +1329,17 @@ async function renderGraph(tabName) {
     .append('text')
     .attr('class', 'link-label')
     .attr('text-anchor', 'middle')
-    .attr('fill', d => getFastenerColor(d.fastener) || '#666')
+    .attr('fill', d => getFastenerColor(d.fastener) || '#888')
     .text(d => d.fastenerQty ? `${d.fastener} ×${d.fastenerQty}` : d.fastener);
   
-  // Draw nodes
+  // Draw nodes - with conditional drag (desktop only)
   const nodeElements = g.selectAll('.node')
     .data(visibleNodes)
     .enter()
     .append('g')
-    .attr('class', 'node');
+    .attr('class', d => 'node' + (lockedNodes.has(d.name) ? ' locked-node' : ''));
   
-  // Enable drag on desktop only
+  // Only enable drag on desktop
   if (!isMobile) {
     nodeElements.call(d3.drag()
       .on('start', dragstarted)
@@ -1516,16 +1347,17 @@ async function renderGraph(tabName) {
       .on('end', dragended));
   }
   
-  // Tooltip
+  // Add tooltip
   nodeElements.append('title')
     .text(d => {
       let tip = d.name;
       if (d.partNumber) tip += `\nP/N: ${d.partNumber}`;
       if (d.status) tip += `\nStatus: ${d.status}`;
+      if (lockedNodes.has(d.name)) tip += `\n🔒 Locked`;
       return tip;
     });
   
-  // Draw shapes
+  // Draw shapes with unique colors per node
   nodeElements.each(function(d) {
     const style = getStyleForDepth(d.depth, maxDepth);
     const uniqueColor = getRandomNodeColor(d.name);
@@ -1542,19 +1374,38 @@ async function renderGraph(tabName) {
     .attr('class', 'status-indicator')
     .attr('cx', -NODE_WIDTH / 2 + 10)
     .attr('cy', d => -d.height / 2 + 10)
-    .attr('r', 5)
+    .attr('r', 6)
     .attr('fill', d => getStatusColor(d.status).fill)
     .attr('stroke', d => getStatusColor(d.status).stroke);
+  
+  // Lock indicator (desktop only)
+  if (!isMobile) {
+    nodeElements.append('text')
+      .attr('class', 'lock-indicator')
+      .attr('x', NODE_WIDTH / 2 - 12)
+      .attr('y', d => -d.height / 2 + 12)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .text(d => lockedNodes.has(d.name) ? '🔒' : '🔓')
+      .on('click', function(event, d) {
+        event.stopPropagation();
+        toggleLock(d);
+        // Update icon
+        d3.select(this).text(lockedNodes.has(d.name) ? '🔒' : '🔓');
+        // Update node class
+        d3.select(this.parentNode).classed('locked-node', lockedNodes.has(d.name));
+      });
+  }
   
   // Node labels
   nodeElements.each(function(d) {
     const group = d3.select(this);
     const fontSize = getFontSize(d.depth, maxDepth);
-    const lines = wrapText(d.name, 15);
+    const lines = wrapText(d.name, 16);
     
     const lineHeight = fontSize + 2;
     const totalTextHeight = lines.length * lineHeight;
-    const startY = d.partNumber ? -totalTextHeight / 2 - 2 : -totalTextHeight / 2 + lineHeight / 2;
+    const startY = d.partNumber ? -totalTextHeight / 2 - 3 : -totalTextHeight / 2 + lineHeight / 2;
     
     lines.forEach((line, i) => {
       group.append('text')
@@ -1571,7 +1422,7 @@ async function renderGraph(tabName) {
         .attr('text-anchor', 'middle')
         .attr('y', startY + lines.length * lineHeight + 2)
         .attr('font-size', '7px')
-        .text(d.partNumber.length > 16 ? d.partNumber.substring(0, 14) + '..' : d.partNumber);
+        .text(d.partNumber.length > 18 ? d.partNumber.substring(0, 16) + '..' : d.partNumber);
     }
   });
   
@@ -1582,7 +1433,7 @@ async function renderGraph(tabName) {
     .attr('class', 'collapse-indicator')
     .attr('cx', -NODE_WIDTH / 2 + 10)
     .attr('cy', d => d.height / 2 - 10)
-    .attr('r', 7)
+    .attr('r', 8)
     .on('click', function(event, d) {
       event.stopPropagation();
       toggleCollapse(d.name);
@@ -1594,19 +1445,23 @@ async function renderGraph(tabName) {
     .attr('y', d => d.height / 2 - 10)
     .attr('text-anchor', 'middle')
     .attr('dy', '0.35em')
-    .attr('font-size', '11px')
+    .attr('font-size', '12px')
     .text(d => collapsedNodes.has(d.name) ? '+' : '−')
     .on('click', function(event, d) {
       event.stopPropagation();
       toggleCollapse(d.name);
     });
   
-  // Tick function
+  // Update positions on simulation tick
   simulation.on('tick', () => {
-    // Constrain to bounds
+    // Keep nodes within bounds and constrain X by depth
     visibleNodes.forEach(node => {
-      node.x = Math.max(NODE_WIDTH / 2 + 10, Math.min(width - NODE_WIDTH / 2 - 10, node.x));
-      node.y = Math.max(node.height / 2 + 10, Math.min(height - node.height / 2 - 10, node.y));
+      if (!lockedNodes.has(node.name)) {
+        const targetX = margin.left + node.depth * depthSpacing;
+        node.x = node.x * 0.95 + targetX * 0.05;
+      }
+      node.x = Math.max(NODE_WIDTH / 2 + 20, Math.min(width - NODE_WIDTH / 2 - 20, node.x));
+      node.y = Math.max(node.height / 2 + 20, Math.min(height - node.height / 2 - 20, node.y));
     });
     
     linkElements.attr('d', d => {
@@ -1614,6 +1469,7 @@ async function renderGraph(tabName) {
       const sourceY = d.source.y;
       const targetX = d.target.x - NODE_WIDTH / 2;
       const targetY = d.target.y;
+      
       const midX = (sourceX + targetX) / 2;
       
       return `M ${sourceX},${sourceY} C ${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`;
@@ -1621,64 +1477,109 @@ async function renderGraph(tabName) {
     
     linkLabels
       .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2 - 6);
+      .attr('y', d => (d.source.y + d.target.y) / 2 - 8);
     
     nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
   });
   
-  // If not using simulation, stop it immediately after initial render
-  if (!useSimulation) {
-    simulation.alpha(0).stop();
-    // Trigger one tick to position everything
-    simulation.tick();
-    linkElements.attr('d', d => {
-      const sourceX = d.source.x + NODE_WIDTH / 2;
-      const sourceY = d.source.y;
-      const targetX = d.target.x - NODE_WIDTH / 2;
-      const targetY = d.target.y;
-      const midX = (sourceX + targetX) / 2;
-      return `M ${sourceX},${sourceY} C ${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`;
-    });
-    linkLabels
-      .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2 - 6);
-    nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
-  }
+  // Save positions when simulation ends
+  simulation.on('end', () => {
+    savePositions(tabName, visibleNodes);
+  });
   
-  // Drag functions
+  // Drag functions (desktop only)
   function dragstarted(event, d) {
-    if (isMobile) return;
-    
-    // Release the node from fixed position for dragging
-    d.fx = null;
-    d.fy = null;
-    
-    if (!event.active) simulation.alphaTarget(0.1).restart();
+    if (isMobile || lockedNodes.has(d.name)) return;
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
   }
   
   function dragged(event, d) {
-    if (isMobile) return;
-    
-    d.x = event.x;
-    d.y = event.y;
-    
-    // Update position immediately
-    d3.select(this).attr('transform', `translate(${d.x}, ${d.y})`);
+    if (isMobile || lockedNodes.has(d.name)) return;
+    d.fx = event.x;
+    d.fy = event.y;
   }
   
   function dragended(event, d) {
     if (isMobile) return;
-    
     if (!event.active) simulation.alphaTarget(0);
     
-    // Fix node at new position
-    d.fx = d.x;
-    d.fy = d.y;
+    if (!lockedNodes.has(d.name)) {
+      d.fx = null;
+      d.fy = null;
+    }
     
-    // Save to localStorage
-    saveToLocalStorage(tabName, visibleNodes);
-    updatePositionSource('local (edited)');
+    // Save positions after drag
+    savePositions(tabName, visibleNodes);
   }
+}
+
+// ==================================================
+// LOCK/UNLOCK FUNCTIONS
+// ==================================================
+function toggleLock(node) {
+  if (lockedNodes.has(node.name)) {
+    // Unlock
+    lockedNodes.delete(node.name);
+    node.fx = null;
+    node.fy = null;
+  } else {
+    // Lock
+    lockedNodes.add(node.name);
+    node.fx = node.x;
+    node.fy = node.y;
+  }
+  
+  // Save positions
+  if (currentGraphData) {
+    savePositions(currentTabName, currentGraphData.nodes);
+  }
+}
+
+function lockAll() {
+  if (isMobile || !currentGraphData) return;
+  
+  currentGraphData.nodes.forEach(node => {
+    lockedNodes.add(node.name);
+    node.fx = node.x;
+    node.fy = node.y;
+  });
+  
+  savePositions(currentTabName, currentGraphData.nodes);
+  renderGraph(currentTabName);
+}
+
+function unlockAll() {
+  if (isMobile || !currentGraphData) return;
+  
+  currentGraphData.nodes.forEach(node => {
+    lockedNodes.delete(node.name);
+    node.fx = null;
+    node.fy = null;
+  });
+  
+  savePositions(currentTabName, currentGraphData.nodes);
+  renderGraph(currentTabName);
+}
+
+function resetPositions() {
+  if (isMobile || !currentTabName) return;
+  
+  lockedNodes.clear();
+  clearPositions(currentTabName);
+  
+  // Reset node positions
+  if (currentGraphData) {
+    currentGraphData.nodes.forEach(node => {
+      node.fx = null;
+      node.fy = null;
+      node.x = undefined;
+      node.y = undefined;
+    });
+  }
+  
+  renderGraph(currentTabName);
 }
 
 function toggleCollapse(nodeName) {
@@ -1687,7 +1588,9 @@ function toggleCollapse(nodeName) {
   } else {
     collapsedNodes.add(nodeName);
   }
-  renderGraph(currentTabName);
+  
+  const tabName = document.getElementById('fileSelect').value;
+  if (tabName) renderGraph(tabName);
 }
 
 // ==================================================
