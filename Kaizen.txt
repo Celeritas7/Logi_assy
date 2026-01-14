@@ -1,8 +1,4 @@
-Lets have a discussion before coding, when I move any block it is retaininning its original position. Can you explain why this is happening?
-
-
-
-There is a fuctional problem with my tree. First of all the blocks which are initially free it push all of them to the left of screen. Can I make it more free. Plus 
+When I'm looking at the pillar assy and I click refresh button my page goes to the the Logi base assy at the start of the dropdown. Is there any way to keep the dropdown selection the same which I have currently selected.
 
 
 
@@ -11,32 +7,9 @@ There is a fuctional problem with my tree. First of all the blocks which are ini
 
 
 
-
-
-Now next step. Lets have a discussion before that. As you can see I'm trying to set the child with many parents. but im not able to do it with current setup.
-
-image 1-2: I tried ";" sign but it is not generating any result in the tree.
-
-image 3-4: I have generated many rows for that but it duplicates the children.
-
-Can this be managed with the code? either way a block with same name should not exist right?
-
-
-
-
-
-Don't generate any code just take input of my next upgrades. Lets discuss before implementing them.
-1. Want to file to take input as csv file online. SO that the markings of completed assembly will be visible inside the tree directly. 
-2. I want the tree to be like the sun ray shape.
 
 
 
 Lets have a discussion abour the following points before generating any code,
 1. Current tree layout is spearding across entire page when only one level 
 Download as image but the map is not fitting in it. any option for that?
-
-
-
-
-The tree should expandable from the right to left. 
-

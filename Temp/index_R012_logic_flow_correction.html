@@ -21,36 +21,36 @@
     .header {
       background: #2c3e50;
       color: white;
-      padding: 12px 20px;
+      padding: 15px 30px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       flex-wrap: wrap;
     }
 
     .header h1 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 500;
     }
 
     .header select {
-      padding: 6px 12px;
-      font-size: 13px;
+      padding: 8px 15px;
+      font-size: 14px;
       border: none;
       border-radius: 4px;
       background: white;
       cursor: pointer;
-      min-width: 160px;
+      min-width: 180px;
     }
 
     .header label {
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .header-btn {
-      padding: 6px 10px;
-      font-size: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
@@ -87,46 +87,26 @@
       background: #c0392b;
     }
 
-    .level-filter {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.1);
-      padding: 4px 10px;
-      border-radius: 4px;
-    }
-
-    .level-filter label {
-      font-size: 12px;
-      color: #ecf0f1;
-    }
-
-    .level-filter select {
-      padding: 4px 8px;
-      font-size: 12px;
-      min-width: 100px;
-    }
-
     .loading {
       color: #f39c12;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .error {
       color: #e74c3c;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .success {
       color: #27ae60;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .legend {
       background: white;
-      padding: 8px 15px;
+      padding: 10px 20px;
       display: flex;
-      gap: 12px;
+      gap: 15px;
       align-items: center;
       border-bottom: 1px solid #ddd;
       flex-wrap: wrap;
@@ -134,7 +114,7 @@
 
     .legend-section {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -142,27 +122,30 @@
     .legend-title {
       font-weight: 600;
       color: #333;
-      font-size: 10px;
+      font-size: 11px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
       font-size: 9px;
       color: #555;
     }
 
-    .legend-color {
-      width: 14px;
+    .legend-shape {
+      width: 20px;
       height: 14px;
-      border-radius: 3px;
-      border: 1px solid rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .legend-shape {
-      width: 18px;
-      height: 14px;
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      border: 1px solid rgba(0,0,0,0.2);
     }
 
     .legend-status {
@@ -174,14 +157,14 @@
 
     .legend-divider {
       width: 1px;
-      height: 22px;
+      height: 25px;
       background: #ddd;
-      margin: 0 2px;
+      margin: 0 3px;
     }
 
     .tree-container {
       width: 100%;
-      height: calc(100vh - 115px);
+      height: calc(100vh - 130px);
       overflow: auto;
       background: white;
     }
@@ -199,60 +182,39 @@
     }
 
     .node-shape {
-      transition: filter 0.2s, opacity 0.3s;
+      transition: filter 0.2s;
     }
 
     .node:hover .node-shape {
-      filter: brightness(0.9);
-    }
-
-    .node.dimmed .node-shape {
-      opacity: 0.3;
-    }
-
-    .node.dimmed .node-label,
-    .node.dimmed .node-pn {
-      opacity: 0.3;
+      filter: brightness(0.92);
     }
 
     .node-label {
       pointer-events: none;
       font-weight: 500;
-      transition: opacity 0.3s;
     }
 
     .node-pn {
       pointer-events: none;
       fill: #888;
       font-style: italic;
-      transition: opacity 0.3s;
     }
 
     .toggle-icon {
       font-weight: bold;
-      font-size: 11px;
+      font-size: 12px;
       fill: #333;
       pointer-events: none;
     }
 
     .link {
       fill: none;
-      transition: opacity 0.3s;
-    }
-
-    .link.dimmed {
-      opacity: 0.15;
     }
 
     .link-label {
-      font-size: 8px;
+      font-size: 9px;
       pointer-events: none;
       font-weight: 500;
-      transition: opacity 0.3s;
-    }
-
-    .link-label.dimmed {
-      opacity: 0.15;
     }
 
     .status-indicator {
@@ -286,27 +248,31 @@
       stroke-width: 2px;
     }
 
+    /* Desktop-only elements */
     .desktop-only {
-      display: inline-flex;
+      display: inline-block;
     }
 
+    /* Mobile badge */
     .mobile-badge {
       background: #e74c3c;
       color: white;
-      padding: 3px 6px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 10px;
+      font-size: 11px;
       display: none;
     }
 
+    /* Position source indicator */
     .position-source {
-      background: rgba(255,255,255,0.15);
-      color: #bdc3c7;
-      padding: 3px 6px;
+      background: #2c3e50;
+      color: #aaa;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 9px;
+      font-size: 10px;
     }
 
+    /* Mobile styles */
     @media (max-width: 768px) {
       .desktop-only {
         display: none !important;
@@ -317,8 +283,8 @@
       }
       
       .header {
-        padding: 8px 12px;
-        gap: 8px;
+        padding: 10px 15px;
+        gap: 10px;
       }
       
       .header h1 {
@@ -327,31 +293,36 @@
       }
       
       .header select {
-        min-width: 120px;
-        font-size: 11px;
-        padding: 5px 8px;
+        min-width: 140px;
+        font-size: 12px;
+        padding: 6px 10px;
       }
       
       .header-btn {
-        padding: 5px 8px;
-        font-size: 10px;
+        padding: 6px 10px;
+        font-size: 11px;
       }
       
       .legend {
-        padding: 5px 10px;
-        gap: 6px;
+        padding: 6px 10px;
+        gap: 8px;
       }
       
       .legend-title {
-        font-size: 8px;
+        font-size: 9px;
       }
       
       .legend-item {
-        font-size: 7px;
+        font-size: 8px;
+      }
+      
+      .legend-shape {
+        width: 16px;
+        height: 12px;
       }
       
       .tree-container {
-        height: calc(100vh - 100px);
+        height: calc(100vh - 110px);
       }
       
       .node {
@@ -368,27 +339,11 @@
   <select id="fileSelect">
     <option value="">Loading...</option>
   </select>
-  
-  <div class="level-filter">
-    <label for="levelFilter">Show Level:</label>
-    <select id="levelFilter">
-      <option value="all">All Levels</option>
-      <option value="1">Up to Level 1</option>
-      <option value="2">Up to Level 2</option>
-      <option value="3">Up to Level 3</option>
-      <option value="4">Up to Level 4</option>
-      <option value="5">Up to Level 5</option>
-      <option value="6">Up to Level 6</option>
-      <option value="7">Up to Level 7</option>
-      <option value="8">Up to Level 8</option>
-    </select>
-  </div>
-  
   <button class="header-btn" onclick="refreshData()">🔄 Refresh</button>
   <button class="header-btn" onclick="expandAll()">➕ Expand</button>
   <button class="header-btn" onclick="collapseAll()">➖ Collapse</button>
   <button class="header-btn freeze-btn desktop-only" onclick="freezeLayout()">❄️ Freeze</button>
-  <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️ JSON</button>
+  <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️ Download JSON</button>
   <button class="header-btn reset-btn desktop-only" onclick="resetLayout()">↺ Reset</button>
   <span id="statusIndicator" class="loading"></span>
   <span id="positionSource" class="position-source"></span>
@@ -397,60 +352,52 @@
 
 <div class="legend">
   <div class="legend-section">
-    <span class="legend-title">Levels:</span>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #e8e8e8;"></div>
-      <span>L1</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #ffcdd2;"></div>
-      <span>L2</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #ffe0b2;"></div>
-      <span>L3</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #fff9c4;"></div>
-      <span>L4</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #c8e6c9;"></div>
-      <span>L5</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #b3e5fc;"></div>
-      <span>L6</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #e1bee7;"></div>
-      <span>L7</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #a5d6a7;"></div>
-      <span>L8</span>
-    </div>
-  </div>
-
-  <div class="legend-divider"></div>
-
-  <div class="legend-section">
     <span class="legend-title">Shapes:</span>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 18 14">
-        <rect x="1" y="1" width="16" height="12" fill="#e8e8e8" stroke="#666" stroke-width="1" rx="0"/>
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <rect x="1" y="1" width="18" height="12" fill="#e8e8e8" stroke="#999" stroke-width="1" rx="0"/>
       </svg>
       <span>Part</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 18 14">
-        <polygon points="3,1 15,1 18,7 15,13 3,13 0,7" fill="#b3e5fc" stroke="#0277bd" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <rect x="1" y="1" width="18" height="12" fill="#ffcdd2" stroke="#b71c1c" stroke-width="1" rx="3"/>
+      </svg>
+      <span>Minor</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <polygon points="10,1 18,5 15,13 5,13 2,5" fill="#ffe0b2" stroke="#e65100" stroke-width="1"/>
+      </svg>
+      <span>L4</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <rect x="1" y="1" width="18" height="12" fill="#fff9c4" stroke="#f9a825" stroke-width="1" rx="6"/>
+      </svg>
+      <span>L3</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <polygon points="4,1 18,1 16,13 2,13" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1"/>
+      </svg>
+      <span>L2</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <polygon points="3,1 17,1 20,7 17,13 3,13 0,7" fill="#b3e5fc" stroke="#0277bd" stroke-width="1"/>
       </svg>
       <span>Sub</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 18 14">
-        <polygon points="4,1 14,1 17,3 17,11 14,13 4,13 1,11 1,3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1"/>
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <ellipse cx="10" cy="7" rx="9" ry="6" fill="#e1bee7" stroke="#7b1fa2" stroke-width="1"/>
+      </svg>
+      <span>Major</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <polygon points="5,1 15,1 19,4 19,10 15,13 5,13 1,10 1,4" fill="#a5d6a7" stroke="#388e3c" stroke-width="1"/>
       </svg>
       <span>Final</span>
     </div>
@@ -461,14 +408,14 @@
   <div class="legend-section">
     <span class="legend-title">Special:</span>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 18 14">
-        <rect x="2" y="2" width="14" height="10" fill="#fee" stroke="#e74c3c" stroke-width="2" rx="2"/>
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <rect x="2" y="2" width="16" height="10" fill="#fee" stroke="#e74c3c" stroke-width="2" rx="2"/>
       </svg>
       <span>Multi-in</span>
     </div>
     <div class="legend-item">
-      <svg class="legend-shape" viewBox="0 0 18 14">
-        <rect x="2" y="2" width="14" height="10" fill="#fee" stroke="#9b59b6" stroke-width="2" stroke-dasharray="2,1" rx="2"/>
+      <svg class="legend-shape" viewBox="0 0 20 14">
+        <rect x="2" y="2" width="16" height="10" fill="#fee" stroke="#9b59b6" stroke-width="2" stroke-dasharray="2,1" rx="2"/>
       </svg>
       <span>Orphan</span>
     </div>
@@ -497,20 +444,24 @@
   <div class="legend-section">
     <span class="legend-title">Fasteners:</span>
     <div class="legend-item">
-      <div class="legend-color" style="background: #3498db; width:10px; height:10px;"></div>
+      <div class="legend-color" style="background: #3498db;"></div>
       <span>CBE</span>
     </div>
     <div class="legend-item">
-      <div class="legend-color" style="background: #9b59b6; width:10px; height:10px;"></div>
+      <div class="legend-color" style="background: #9b59b6;"></div>
       <span>CBST</span>
     </div>
     <div class="legend-item">
-      <div class="legend-color" style="background: #27ae60; width:10px; height:10px;"></div>
+      <div class="legend-color" style="background: #27ae60;"></div>
       <span>M</span>
     </div>
     <div class="legend-item">
-      <div class="legend-color" style="background: #e67e22; width:10px; height:10px;"></div>
+      <div class="legend-color" style="background: #e67e22;"></div>
       <span>MS</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #e74c3c;"></div>
+      <span>Press</span>
     </div>
   </div>
 </div>
@@ -526,7 +477,8 @@
 const GOOGLE_SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
 
 // GitHub raw URL for positions JSON files
-const POSITIONS_BASE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/positions/";
+// UPDATE THIS to your GitHub repo!
+const POSITIONS_BASE_URL = "https://raw.githubusercontent.com/Celeritas7Logi_assy/main/positions/";
 
 const SHEET_TABS = [
   { name: "Logi_base_L1", gid: "1604202891" },
@@ -544,27 +496,6 @@ function getSheetUrl(gid) {
 function getPositionsUrl(tabName) {
   const fileName = tabName.replace(/\s+/g, '_') + '.json';
   return POSITIONS_BASE_URL + fileName;
-}
-
-// ==================================================
-// LEVEL CONFIGURATION - 8 Levels with Colors & Shapes
-// Level 1 = Parts (leftmost), Level 8 = Final (rightmost)
-// ==================================================
-const LEVEL_CONFIG = [
-  { level: 1, color: "#e8e8e8", shape: "rectangle",         name: "Parts" },
-  { level: 2, color: "#ffcdd2", shape: "rounded_rectangle", name: "Minor Assy" },
-  { level: 3, color: "#ffe0b2", shape: "pentagon",          name: "L3 Assy" },
-  { level: 4, color: "#fff9c4", shape: "stadium",           name: "L4 Assy" },
-  { level: 5, color: "#c8e6c9", shape: "parallelogram",     name: "L5 Assy" },
-  { level: 6, color: "#b3e5fc", shape: "hexagon",           name: "Sub Assy" },
-  { level: 7, color: "#e1bee7", shape: "ellipse",           name: "Major Assy" },
-  { level: 8, color: "#a5d6a7", shape: "octagon",           name: "Final Assy" },
-];
-
-function getLevelConfig(level) {
-  const maxLevel = LEVEL_CONFIG.length;
-  const clampedLevel = Math.max(1, Math.min(level, maxLevel));
-  return LEVEL_CONFIG[clampedLevel - 1];
 }
 
 // ==================================================
@@ -612,6 +543,51 @@ function getFastenerColor(fastener) {
 }
 
 // ==================================================
+// STYLE CONFIGURATION - 8 levels with unique colors
+// ==================================================
+const STYLE_SCALE = [
+  { shape: "rectangle",         fill: "#e8e8e8" },  // 0 - Parts
+  { shape: "rounded_rectangle", fill: "#ffcdd2" },  // 1 - Minor
+  { shape: "pentagon",          fill: "#ffe0b2" },  // 2 - L4
+  { shape: "stadium",           fill: "#fff9c4" },  // 3 - L3
+  { shape: "parallelogram",     fill: "#c8e6c9" },  // 4 - L2
+  { shape: "hexagon",           fill: "#b3e5fc" },  // 5 - Sub
+  { shape: "ellipse",           fill: "#e1bee7" },  // 6 - Major
+  { shape: "octagon",           fill: "#a5d6a7" },  // 7 - Final
+];
+
+// Random color palette for unique node colors
+const NODE_COLOR_PALETTE = [
+  "#ffcdd2", "#f8bbd0", "#e1bee7", "#d1c4e9", "#c5cae9",
+  "#bbdefb", "#b3e5fc", "#b2ebf2", "#b2dfdb", "#c8e6c9",
+  "#dcedc8", "#f0f4c3", "#fff9c4", "#ffecb3", "#ffe0b2",
+  "#ffccbc", "#d7ccc8", "#cfd8dc", "#fce4ec", "#f3e5f5",
+  "#ede7f6", "#e8eaf6", "#e3f2fd", "#e1f5fe", "#e0f7fa",
+  "#e0f2f1", "#e8f5e9", "#f1f8e9", "#f9fbe7", "#fffde7",
+  "#fff8e1", "#fff3e0", "#fbe9e7", "#efebe9", "#eceff1"
+];
+
+const nodeColorMap = new Map();
+
+function getRandomNodeColor(nodeName) {
+  if (nodeColorMap.has(nodeName)) {
+    return nodeColorMap.get(nodeName);
+  }
+  let hash = 0;
+  for (let i = 0; i < nodeName.length; i++) {
+    hash = ((hash << 5) - hash) + nodeName.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const colorIndex = Math.abs(hash) % NODE_COLOR_PALETTE.length;
+  const color = NODE_COLOR_PALETTE[colorIndex];
+  nodeColorMap.set(nodeName, color);
+  return color;
+}
+
+const FONT_SIZES = [10, 10, 11, 11, 12, 12, 13, 14];
+const NODE_WIDTH = 130;
+
+// ==================================================
 // GLOBAL STATE
 // ==================================================
 let loadedData = {};
@@ -619,16 +595,15 @@ let currentGraphData = null;
 let collapsedNodes = new Set();
 let simulation = null;
 let currentTabName = '';
-let positionSource = 'none';
+let positionSource = 'none'; // 'github', 'local', 'simulation'
 let isFrozen = false;
-let currentLevelFilter = 'all';
 
+// Mobile detection
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
   || window.innerWidth < 768;
 
+// LocalStorage key
 const STORAGE_PREFIX = 'assembly_tree_';
-const NODE_WIDTH = 125;
-const FONT_SIZES = [9, 9, 10, 10, 11, 11, 12, 13];
 
 function getStorageKey(tabName) {
   return STORAGE_PREFIX + tabName.replace(/\s+/g, '_');
@@ -637,6 +612,8 @@ function getStorageKey(tabName) {
 // ==================================================
 // POSITION MANAGEMENT
 // ==================================================
+
+// Save to localStorage
 function saveToLocalStorage(tabName, nodes) {
   const positions = {};
   nodes.forEach(node => {
@@ -656,16 +633,20 @@ function saveToLocalStorage(tabName, nodes) {
   }
 }
 
+// Load from localStorage
 function loadFromLocalStorage(tabName) {
   try {
     const saved = localStorage.getItem(getStorageKey(tabName));
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      return JSON.parse(saved);
+    }
   } catch (e) {
     console.warn('Could not load from localStorage:', e);
   }
   return null;
 }
 
+// Clear localStorage
 function clearLocalStorage(tabName) {
   try {
     localStorage.removeItem(getStorageKey(tabName));
@@ -674,17 +655,22 @@ function clearLocalStorage(tabName) {
   }
 }
 
+// Load from GitHub
 async function loadFromGitHub(tabName) {
   try {
     const url = getPositionsUrl(tabName);
     const response = await fetch(url);
-    if (response.ok) return await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    }
   } catch (e) {
-    console.log('No GitHub positions for:', tabName);
+    console.log('No GitHub positions found for:', tabName);
   }
   return null;
 }
 
+// Download positions as JSON
 function downloadPositions() {
   if (!currentGraphData || !currentTabName) {
     setStatus('No data to download', 'error');
@@ -716,29 +702,37 @@ function downloadPositions() {
   setTimeout(() => setStatus(''), 2000);
 }
 
+// Freeze current layout
 function freezeLayout() {
   if (!currentGraphData) return;
   
+  // Fix all nodes in place
   currentGraphData.nodes.forEach(node => {
     node.fx = node.x;
     node.fy = node.y;
   });
   
-  if (simulation) simulation.stop();
+  // Stop simulation
+  if (simulation) {
+    simulation.stop();
+  }
   
+  // Save to localStorage
   saveToLocalStorage(currentTabName, currentGraphData.nodes);
   
   isFrozen = true;
-  setStatus('Layout frozen!', 'success');
+  setStatus('Layout frozen! Click Download to save.', 'success');
   updatePositionSource('local (frozen)');
-  setTimeout(() => setStatus(''), 2000);
 }
 
+// Reset layout
 function resetLayout() {
   if (!currentTabName) return;
   
+  // Clear localStorage
   clearLocalStorage(currentTabName);
   
+  // Reset node positions
   if (currentGraphData) {
     currentGraphData.nodes.forEach(node => {
       node.fx = null;
@@ -751,6 +745,7 @@ function resetLayout() {
   isFrozen = false;
   positionSource = 'simulation';
   
+  // Re-render
   renderGraph(currentTabName);
   
   setStatus('Layout reset!', 'success');
@@ -771,9 +766,18 @@ function darkenColor(hex, factor = 0.7) {
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
 
-function getFontSize(level) {
-  const index = Math.min(level - 1, FONT_SIZES.length - 1);
-  return FONT_SIZES[Math.max(0, index)];
+function getStyleForDepth(depth, maxDepth) {
+  if (maxDepth === 0) return STYLE_SCALE[STYLE_SCALE.length - 1];
+  const normalizedDepth = depth / maxDepth;
+  const index = Math.min(Math.round(normalizedDepth * (STYLE_SCALE.length - 1)), STYLE_SCALE.length - 1);
+  return STYLE_SCALE[index];
+}
+
+function getFontSize(depth, maxDepth) {
+  if (maxDepth === 0) return FONT_SIZES[FONT_SIZES.length - 1];
+  const normalizedDepth = depth / maxDepth;
+  const index = Math.min(Math.round(normalizedDepth * (FONT_SIZES.length - 1)), FONT_SIZES.length - 1);
+  return FONT_SIZES[index];
 }
 
 function setStatus(msg, type = 'loading') {
@@ -793,9 +797,9 @@ function updatePositionSource(source) {
 }
 
 function calculateNodeHeight(name, partNumber) {
-  const maxCharsPerLine = 14;
+  const maxCharsPerLine = 15;
   const nameLines = Math.ceil(name.length / maxCharsPerLine);
-  let height = nameLines <= 1 ? 40 : (nameLines === 2 ? 50 : 58);
+  let height = nameLines <= 1 ? 42 : (nameLines === 2 ? 52 : 62);
   if (partNumber) height += 10;
   return height;
 }
@@ -870,14 +874,13 @@ function parseCSVLine(line) {
 }
 
 // ==================================================
-// CSV TO DAG WITH AUTO-CALCULATED LEVELS
+// CSV TO DAG
 // ==================================================
 function csvToDAG(csvData) {
   const nodes = new Map();
   const links = [];
   let finalNodeName = null;
   
-  // First pass: Create nodes and relationships
   csvData.forEach(row => {
     const childName = row.Child.trim();
     
@@ -889,7 +892,7 @@ function csvToDAG(csvData) {
         partNumber: partNumber,
         status: row.Status || '',
         qty: parseInt(row.Qty) || 1,
-        level: -1,  // Will be auto-calculated
+        depth: -1,
         goesInto: [],
         receivesFrom: [],
         isOrphan: false,
@@ -908,20 +911,17 @@ function csvToDAG(csvData) {
     parents.forEach(parentName => {
       const parentUpper = parentName.toUpperCase();
       
-      // FINAL or ROOT marker = this is the final assembly
       if (parentUpper === 'FINAL' || parentUpper === 'ROOT') {
         nodes.get(childName).isFinal = true;
         finalNodeName = childName;
         return;
       }
       
-      // NONE or ORPHAN = no upstream connection
       if (parentUpper === 'NONE' || parentUpper === 'ORPHAN') {
         nodes.get(childName).isOrphan = true;
         return;
       }
       
-      // Create parent node if doesn't exist
       if (!nodes.has(parentName)) {
         nodes.set(parentName, {
           id: parentName,
@@ -929,7 +929,7 @@ function csvToDAG(csvData) {
           partNumber: '',
           status: '',
           qty: 1,
-          level: -1,
+          depth: -1,
           goesInto: [],
           receivesFrom: [],
           isOrphan: false,
@@ -942,7 +942,6 @@ function csvToDAG(csvData) {
         });
       }
       
-      // Link: Child → Parent (child goes INTO parent)
       links.push({
         source: childName,
         target: parentName,
@@ -962,12 +961,10 @@ function csvToDAG(csvData) {
     });
   });
   
-  // Mark multi-input nodes
   nodes.forEach(node => {
     node.isMultiParent = node.receivesFrom.length > 1;
   });
   
-  // Find final node if not explicitly marked
   if (!finalNodeName) {
     for (const [name, node] of nodes) {
       if (node.goesInto.length === 0 && !node.isOrphan) {
@@ -983,109 +980,71 @@ function csvToDAG(csvData) {
     return null;
   }
   
-  // ==================================================
-  // AUTO-CALCULATE LEVELS
-  // Final = highest level, work backwards to find levels
-  // ==================================================
-  
-  // Step 1: BFS from FINAL going backwards to calculate distance
-  const queue = [{ name: finalNodeName, distance: 0 }];
+  // Calculate depths
+  const queue = [{ name: finalNodeName, depth: 0 }];
   const visited = new Set();
-  let maxDistance = 0;
+  let maxDepth = 0;
   
   while (queue.length > 0) {
-    const { name, distance } = queue.shift();
+    const { name, depth } = queue.shift();
     if (visited.has(name)) continue;
     visited.add(name);
     
     const node = nodes.get(name);
     if (node) {
-      node.distance = distance;
-      maxDistance = Math.max(maxDistance, distance);
+      node.depth = depth;
+      maxDepth = Math.max(maxDepth, depth);
       
-      // Go to nodes that feed INTO this one (children in assembly terms)
       node.receivesFrom.forEach(sourceName => {
         if (!visited.has(sourceName)) {
-          queue.push({ name: sourceName, distance: distance + 1 });
+          queue.push({ name: sourceName, depth: depth + 1 });
         }
       });
     }
   }
   
-  // Step 2: Convert distance to level
-  // FINAL = maxLevel, Parts = Level 1
-  // Level = maxDistance - distance + 1
-  const maxLevel = Math.min(maxDistance + 1, 8); // Cap at 8 levels
-  
   nodes.forEach(node => {
-    if (node.distance !== undefined) {
-      // Invert: distance 0 (final) = highest level, max distance = level 1
-      const rawLevel = maxDistance - node.distance + 1;
-      // Scale to 1-8 range
-      node.level = Math.max(1, Math.min(8, Math.ceil(rawLevel * 8 / (maxDistance + 1))));
+    if (node.depth !== -1) {
+      node.depth = maxDepth - node.depth;
     }
   });
   
-  // Ensure FINAL is level 8
-  const finalNode = nodes.get(finalNodeName);
-  if (finalNode) {
-    finalNode.level = 8;
-  }
-  
-  // Step 3: Handle orphans - level = min(target levels) - 1
   nodes.forEach(node => {
-    if (node.level === -1 || node.distance === undefined) {
-      let minTargetLevel = Infinity;
+    if (node.depth === -1) {
+      let minTargetDepth = Infinity;
       node.goesInto.forEach(targetName => {
         const target = nodes.get(targetName);
-        if (target && target.level > 0) {
-          minTargetLevel = Math.min(minTargetLevel, target.level);
+        if (target && target.depth !== -1) {
+          minTargetDepth = Math.min(minTargetDepth, target.depth);
         }
       });
       
-      if (minTargetLevel !== Infinity) {
-        node.level = Math.max(1, minTargetLevel - 1);
+      if (minTargetDepth !== Infinity) {
+        node.depth = minTargetDepth - 1;
+        if (node.depth < 0) node.depth = 0;
       } else {
-        node.level = 1; // Default to level 1 (parts)
+        node.depth = 0;
       }
     }
   });
   
-  // Step 4: Ensure parts (no receivesFrom) are at lower levels
+  maxDepth = 0;
   nodes.forEach(node => {
-    if (node.receivesFrom.length === 0 && !node.isFinal) {
-      // This is a leaf/part - should be at level 1 or 2
-      node.level = Math.min(node.level, 2);
-    }
-  });
-  
-  // Calculate max level for reference
-  let calculatedMaxLevel = 1;
-  nodes.forEach(node => {
-    calculatedMaxLevel = Math.max(calculatedMaxLevel, node.level);
+    maxDepth = Math.max(maxDepth, node.depth);
   });
   
   return {
     nodes: Array.from(nodes.values()),
     links: links,
     finalName: finalNodeName,
-    maxLevel: calculatedMaxLevel
+    maxDepth: maxDepth
   };
 }
 
 // ==================================================
-// VISIBILITY & FILTERING
+// VISIBILITY
 // ==================================================
-function isNodeVisible(node, collapsedNodes, levelFilter) {
-  // Level filter check
-  if (levelFilter !== 'all') {
-    const maxVisibleLevel = parseInt(levelFilter);
-    if (node.level > maxVisibleLevel) {
-      return false;
-    }
-  }
-  
-  // Collapse check
+function isNodeVisible(node, collapsedNodes) {
   if (node.isFinal) return true;
   if (node.goesInto.length === 0) return true;
   
@@ -1095,12 +1054,6 @@ function isNodeVisible(node, collapsedNodes, levelFilter) {
     }
   }
   return false;
-}
-
-function shouldDimNode(node, levelFilter) {
-  if (levelFilter === 'all') return false;
-  const maxVisibleLevel = parseInt(levelFilter);
-  return node.level > maxVisibleLevel;
 }
 
 // ==================================================
@@ -1194,7 +1147,7 @@ function drawShape(selection, shapeType, width, height, fill, stroke, statusStro
   
   const finalStroke = statusStroke || stroke;
   const strokeWidth = (isMultiParent || isOrphan) ? 3 : 2;
-  const dashArray = isOrphan ? '5,3' : 'none';
+  const dashArray = isOrphan ? '6,3' : 'none';
 
   selection.selectAll('.node-shape, .multi-parent-indicator').remove();
 
@@ -1414,26 +1367,18 @@ async function renderGraph(tabName) {
   currentTabName = tabName;
   isFrozen = false;
   
+  // Show mobile indicator
   const mobileIndicator = document.getElementById('mobileIndicator');
   mobileIndicator.style.display = isMobile ? 'inline-block' : 'none';
   
   if (simulation) simulation.stop();
   
-  const { nodes, links, finalName, maxLevel } = graphData;
+  const { nodes, links, finalName, maxDepth } = graphData;
   
-  // Get current level filter
-  currentLevelFilter = document.getElementById('levelFilter').value;
-  
-  // Filter visible nodes based on collapse and level filter
-  const visibleNodes = nodes.filter(n => isNodeVisible(n, collapsedNodes, currentLevelFilter));
+  // Filter visible nodes
+  const visibleNodes = nodes.filter(n => isNodeVisible(n, collapsedNodes));
   const visibleNodeNames = new Set(visibleNodes.map(n => n.name));
-  
-  // Filter links - only show if both source and target are visible
-  const visibleLinks = links.filter(l => {
-    const sourceVisible = visibleNodeNames.has(l.source);
-    const targetVisible = visibleNodeNames.has(l.target);
-    return sourceVisible && targetVisible;
-  });
+  const visibleLinks = links.filter(l => visibleNodeNames.has(l.source) && visibleNodeNames.has(l.target));
   
   const nodeMap = new Map(visibleNodes.map(n => [n.name, n]));
   
@@ -1445,8 +1390,8 @@ async function renderGraph(tabName) {
   })).filter(l => l.source && l.target);
   
   // Calculate dimensions
-  const width = Math.max(1400, maxLevel * 200 + 300);
-  const height = Math.max(700, visibleNodes.length * 50 + 200);
+  const width = Math.max(1600, (maxDepth + 1) * 220 + 300);
+  const height = Math.max(800, visibleNodes.length * 55 + 200);
   
   const svg = d3.select('#treeSvg')
     .attr('width', width)
@@ -1460,22 +1405,22 @@ async function renderGraph(tabName) {
     .attr('refX', 18)
     .attr('refY', 0)
     .attr('orient', 'auto')
-    .attr('markerWidth', 5)
-    .attr('markerHeight', 5)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
     .append('path')
     .attr('d', 'M 0,-5 L 10,0 L 0,5')
     .attr('fill', '#888');
   
   const g = svg.append('g').attr('class', 'main');
   
-  // Position nodes by level
-  const levelSpacing = 180;
-  const margin = { left: 100, top: 60 };
+  // Load positions - priority: GitHub > localStorage > simulation
+  const depthSpacing = 200;
+  const margin = { left: 120, top: 80 };
   
-  // Load positions
   let savedPositions = null;
   let useSimulation = true;
   
+  // Try GitHub first
   setStatus('Loading positions...');
   const githubPositions = await loadFromGitHub(tabName);
   if (githubPositions && githubPositions.positions) {
@@ -1483,6 +1428,7 @@ async function renderGraph(tabName) {
     positionSource = 'github';
     useSimulation = false;
   } else {
+    // Try localStorage
     const localData = loadFromLocalStorage(tabName);
     if (localData && localData.positions) {
       savedPositions = localData.positions;
@@ -1505,9 +1451,8 @@ async function renderGraph(tabName) {
       node.fx = node.x;
       node.fy = node.y;
     } else {
-      // Position based on level (level 1 = left, level 8 = right)
-      node.x = margin.left + (node.level - 1) * levelSpacing;
-      node.y = height / 2 + (Math.random() - 0.5) * 250;
+      node.x = margin.left + node.depth * depthSpacing;
+      node.y = height / 2 + (Math.random() - 0.5) * 300;
       if (!useSimulation) {
         node.fx = node.x;
         node.fy = node.y;
@@ -1519,20 +1464,21 @@ async function renderGraph(tabName) {
   simulation = d3.forceSimulation(visibleNodes)
     .force('link', d3.forceLink(simLinks)
       .id(d => d.name)
-      .distance(140)
+      .distance(160)
       .strength(0.3))
     .force('charge', d3.forceManyBody()
-      .strength(-250))
+      .strength(-300))
     .force('collide', d3.forceCollide()
-      .radius(d => Math.max(NODE_WIDTH, d.height) / 2 + 12)
+      .radius(d => Math.max(NODE_WIDTH, d.height) / 2 + 15)
       .strength(0.8))
     .alphaDecay(0.03)
     .velocityDecay(0.4);
   
+  // Only add positioning forces if using simulation
   if (useSimulation) {
     simulation
       .force('y', d3.forceY(height / 2).strength(0.02))
-      .force('x', d3.forceX(d => margin.left + (d.level - 1) * levelSpacing).strength(0.25));
+      .force('x', d3.forceX(d => margin.left + d.depth * depthSpacing).strength(0.3));
   }
   
   // Draw links
@@ -1542,7 +1488,7 @@ async function renderGraph(tabName) {
     .append('path')
     .attr('class', 'link')
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
-    .attr('stroke-width', 1.5)
+    .attr('stroke-width', 2)
     .attr('marker-end', 'url(#arrowhead)');
   
   // Draw link labels
@@ -1574,30 +1520,28 @@ async function renderGraph(tabName) {
   nodeElements.append('title')
     .text(d => {
       let tip = d.name;
-      tip += `\nLevel: ${d.level}`;
       if (d.partNumber) tip += `\nP/N: ${d.partNumber}`;
       if (d.status) tip += `\nStatus: ${d.status}`;
       return tip;
     });
   
-  // Draw shapes with level-based colors
+  // Draw shapes
   nodeElements.each(function(d) {
-    const levelConfig = getLevelConfig(d.level);
-    const fill = levelConfig.color;
-    const shape = levelConfig.shape;
-    const defaultStroke = darkenColor(fill);
+    const style = getStyleForDepth(d.depth, maxDepth);
+    const uniqueColor = getRandomNodeColor(d.name);
+    const defaultStroke = darkenColor(uniqueColor);
     const statusColor = getStatusColor(d.status);
     const statusStroke = d.status ? statusColor.stroke : null;
     
-    drawShape(d3.select(this), shape, NODE_WIDTH, d.height, fill, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
+    drawShape(d3.select(this), style.shape, NODE_WIDTH, d.height, uniqueColor, defaultStroke, statusStroke, d.isMultiParent, d.isOrphan);
   });
   
   // Status indicator
   nodeElements.filter(d => d.status)
     .append('circle')
     .attr('class', 'status-indicator')
-    .attr('cx', -NODE_WIDTH / 2 + 9)
-    .attr('cy', d => -d.height / 2 + 9)
+    .attr('cx', -NODE_WIDTH / 2 + 10)
+    .attr('cy', d => -d.height / 2 + 10)
     .attr('r', 5)
     .attr('fill', d => getStatusColor(d.status).fill)
     .attr('stroke', d => getStatusColor(d.status).stroke);
@@ -1605,8 +1549,8 @@ async function renderGraph(tabName) {
   // Node labels
   nodeElements.each(function(d) {
     const group = d3.select(this);
-    const fontSize = getFontSize(d.level);
-    const lines = wrapText(d.name, 14);
+    const fontSize = getFontSize(d.depth, maxDepth);
+    const lines = wrapText(d.name, 15);
     
     const lineHeight = fontSize + 2;
     const totalTextHeight = lines.length * lineHeight;
@@ -1627,7 +1571,7 @@ async function renderGraph(tabName) {
         .attr('text-anchor', 'middle')
         .attr('y', startY + lines.length * lineHeight + 2)
         .attr('font-size', '7px')
-        .text(d.partNumber.length > 14 ? d.partNumber.substring(0, 12) + '..' : d.partNumber);
+        .text(d.partNumber.length > 16 ? d.partNumber.substring(0, 14) + '..' : d.partNumber);
     }
   });
   
@@ -1636,9 +1580,9 @@ async function renderGraph(tabName) {
   
   nodesWithInputs.append('circle')
     .attr('class', 'collapse-indicator')
-    .attr('cx', -NODE_WIDTH / 2 + 9)
-    .attr('cy', d => d.height / 2 - 9)
-    .attr('r', 6)
+    .attr('cx', -NODE_WIDTH / 2 + 10)
+    .attr('cy', d => d.height / 2 - 10)
+    .attr('r', 7)
     .on('click', function(event, d) {
       event.stopPropagation();
       toggleCollapse(d.name);
@@ -1646,11 +1590,11 @@ async function renderGraph(tabName) {
   
   nodesWithInputs.append('text')
     .attr('class', 'toggle-icon')
-    .attr('x', -NODE_WIDTH / 2 + 9)
-    .attr('y', d => d.height / 2 - 9)
+    .attr('x', -NODE_WIDTH / 2 + 10)
+    .attr('y', d => d.height / 2 - 10)
     .attr('text-anchor', 'middle')
     .attr('dy', '0.35em')
-    .attr('font-size', '10px')
+    .attr('font-size', '11px')
     .text(d => collapsedNodes.has(d.name) ? '+' : '−')
     .on('click', function(event, d) {
       event.stopPropagation();
@@ -1659,6 +1603,7 @@ async function renderGraph(tabName) {
   
   // Tick function
   simulation.on('tick', () => {
+    // Constrain to bounds
     visibleNodes.forEach(node => {
       node.x = Math.max(NODE_WIDTH / 2 + 10, Math.min(width - NODE_WIDTH / 2 - 10, node.x));
       node.y = Math.max(node.height / 2 + 10, Math.min(height - node.height / 2 - 10, node.y));
@@ -1676,16 +1621,16 @@ async function renderGraph(tabName) {
     
     linkLabels
       .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
+      .attr('y', d => (d.source.y + d.target.y) / 2 - 6);
     
     nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
   });
   
-  // Stop simulation immediately if not using it
+  // If not using simulation, stop it immediately after initial render
   if (!useSimulation) {
     simulation.alpha(0).stop();
+    // Trigger one tick to position everything
     simulation.tick();
-    
     linkElements.attr('d', d => {
       const sourceX = d.source.x + NODE_WIDTH / 2;
       const sourceY = d.source.y;
@@ -1694,34 +1639,43 @@ async function renderGraph(tabName) {
       const midX = (sourceX + targetX) / 2;
       return `M ${sourceX},${sourceY} C ${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`;
     });
-    
     linkLabels
       .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2 - 5);
-    
+      .attr('y', d => (d.source.y + d.target.y) / 2 - 6);
     nodeElements.attr('transform', d => `translate(${d.x}, ${d.y})`);
   }
   
   // Drag functions
   function dragstarted(event, d) {
     if (isMobile) return;
+    
+    // Release the node from fixed position for dragging
     d.fx = null;
     d.fy = null;
+    
     if (!event.active) simulation.alphaTarget(0.1).restart();
   }
   
   function dragged(event, d) {
     if (isMobile) return;
+    
     d.x = event.x;
     d.y = event.y;
+    
+    // Update position immediately
     d3.select(this).attr('transform', `translate(${d.x}, ${d.y})`);
   }
   
   function dragended(event, d) {
     if (isMobile) return;
+    
     if (!event.active) simulation.alphaTarget(0);
+    
+    // Fix node at new position
     d.fx = d.x;
     d.fy = d.y;
+    
+    // Save to localStorage
     saveToLocalStorage(tabName, visibleNodes);
     updatePositionSource('local (edited)');
   }
@@ -1737,23 +1691,11 @@ function toggleCollapse(nodeName) {
 }
 
 // ==================================================
-// LEVEL FILTER HANDLER
-// ==================================================
-document.getElementById('levelFilter').addEventListener('change', (e) => {
-  currentLevelFilter = e.target.value;
-  if (currentTabName) {
-    renderGraph(currentTabName);
-  }
-});
-
-// ==================================================
 // INITIALIZATION
 // ==================================================
 document.getElementById('fileSelect').addEventListener('change', (e) => {
   if (e.target.value) {
     collapsedNodes.clear();
-    document.getElementById('levelFilter').value = 'all';
-    currentLevelFilter = 'all';
     renderGraph(e.target.value);
   }
 });

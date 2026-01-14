@@ -1,0 +1,74 @@
+{
+  "tabName": "1-2_Pillar_mounting",
+  "savedAt": "2026-01-12T08:32:44.424Z",
+  "positions": {
+    "Pillar → Base assy": {
+      "x": 1060,
+      "y": 614
+    },
+    "Logi base assy": {
+      "x": 873,
+      "y": 612
+    },
+    "Pillar LH holder plate": {
+      "x": 672,
+      "y": 765
+    },
+    "Pillar RH holder plate": {
+      "x": 888,
+      "y": 764
+    },
+    "Pillar back holder plate": {
+      "x": 478,
+      "y": 769
+    },
+    "Pulley mounting plate": {
+      "x": 83,
+      "y": 355
+    },
+    "Pulley mounting shaft": {
+      "x": 307,
+      "y": 228
+    },
+    "Pulley": {
+      "x": 309,
+      "y": 122
+    },
+    "Damper mounting plate": {
+      "x": 239,
+      "y": 631
+    },
+    "Dampers": {
+      "x": 380,
+      "y": 652
+    },
+    "Remove I bolts": {
+      "x": 115,
+      "y": 72
+    },
+    "Pulley assembly": {
+      "x": 78,
+      "y": 223
+    },
+    "Damper mounting plate assy": {
+      "x": 478,
+      "y": 495
+    },
+    "Pillar assy": {
+      "x": 643,
+      "y": 609
+    },
+    "stopper block": {
+      "x": 816,
+      "y": 133
+    },
+    "Counterweight": {
+      "x": 573,
+      "y": 199
+    },
+    "Counterweight assy": {
+      "x": 351,
+      "y": 358
+    }
+  }
+}
