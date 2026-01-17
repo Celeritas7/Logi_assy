@@ -1,0 +1,62 @@
+{
+  "tabName": "L3_mounting",
+  "savedAt": "2026-01-17T02:46:54.278Z",
+  "positions": {
+    "Pillar → Base assy": {
+      "x": 155,
+      "y": 434
+    },
+    "L3 mounting plate 1": {
+      "x": 378,
+      "y": 432
+    },
+    "L3 mounting plate 2": {
+      "x": 636,
+      "y": 428
+    },
+    "L3 assy": {
+      "x": 1078,
+      "y": 435
+    },
+    "L3 motor mounting block L": {
+      "x": 688,
+      "y": 209
+    },
+    "L3 motor mounting assy": {
+      "x": 933,
+      "y": 243
+    },
+    "L3 motor mounting block R": {
+      "x": 955,
+      "y": 103
+    },
+    "L3 motor mounting plate": {
+      "x": 718,
+      "y": 104
+    },
+    "Rack gear": {
+      "x": 1115,
+      "y": 273
+    },
+    "Arm assy": {
+      "x": 1185,
+      "y": 603
+    },
+    "Cable carrier mounting plate 1": {
+      "x": 761,
+      "y": 564
+    },
+    "Cable carrier mounting plate 2": {
+      "x": 939,
+      "y": 602
+    },
+    "Cable carrier mounting plate 3": {
+      "x": 756,
+      "y": 664
+    },
+    "L3 → pillar assy": {
+      "x": 1410,
+      "y": 434
+    }
+  }
+}
