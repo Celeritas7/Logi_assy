@@ -132,50 +132,6 @@
       display: none;
     }
 
-    /* Dropdown styles */
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropdown-btn {
-      background: #16a085;
-    }
-
-    .dropdown-btn:hover {
-      background: #138d75;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      background: white;
-      min-width: 150px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      border-radius: 4px;
-      z-index: 1000;
-      overflow: hidden;
-    }
-
-    .dropdown-content.show {
-      display: block;
-    }
-
-    .dropdown-content a {
-      color: #333;
-      padding: 10px 15px;
-      text-decoration: none;
-      display: block;
-      font-size: 12px;
-      transition: background 0.2s;
-    }
-
-    .dropdown-content a:hover {
-      background: #f0f0f0;
-    }
-
     .legend {
       background: white;
       padding: 6px 12px;
@@ -469,15 +425,7 @@
   <button class="header-btn" onclick="refreshData()">🔄</button>
   <button class="header-btn" onclick="expandAll()">➕</button>
   <button class="header-btn" onclick="collapseAll()">➖</button>
-  
-  <div class="dropdown desktop-only">
-    <button class="header-btn dropdown-btn" onclick="toggleDropdown()">📤 Export ▼</button>
-    <div class="dropdown-content" id="exportDropdown">
-      <a href="#" onclick="downloadPNG(); return false;">📷 Download PNG</a>
-      <a href="#" onclick="downloadSVG(); return false;">📥 Download SVG</a>
-    </div>
-  </div>
-  
+  <button class="header-btn" onclick="printTree()">🖨️</button>
   <button class="header-btn freeze-btn desktop-only" onclick="freezeLayout()">❄️</button>
   <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️</button>
   <button class="header-btn reset-btn desktop-only" onclick="resetLayout()">↺</button>
@@ -1139,117 +1087,9 @@ function refreshData() {
   loadAllSheets(currentSelection);
 }
 
-function toggleDropdown() {
-  document.getElementById('exportDropdown').classList.toggle('show');
-}
-
-// Close dropdown when clicking outside
-window.onclick = function(event) {
-  if (!event.target.matches('.dropdown-btn')) {
-    const dropdowns = document.getElementsByClassName('dropdown-content');
-    for (let i = 0; i < dropdowns.length; i++) {
-      dropdowns[i].classList.remove('show');
-    }
-  }
-}
-
-function downloadPNG() {
-  const svg = document.getElementById('treeSvg');
-  if (!svg) {
-    setStatus('No tree to export', 'error');
-    return;
-  }
-  
-  setStatus('Generating PNG...', 'loading');
-  
-  // Get SVG dimensions
-  const svgRect = svg.getBoundingClientRect();
-  const width = parseInt(svg.getAttribute('width')) || svgRect.width;
-  const height = parseInt(svg.getAttribute('height')) || svgRect.height;
-  
-  // Clone SVG and prepare for export
-  const svgClone = svg.cloneNode(true);
-  
-  // Ensure all styles are inline for proper rendering
-  const svgData = new XMLSerializer().serializeToString(svgClone);
-  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(svgBlob);
-  
-  // Create canvas
-  const canvas = document.createElement('canvas');
-  const scale = 2; // 2x resolution for better quality
-  canvas.width = width * scale;
-  canvas.height = height * scale;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.scale(scale, scale);
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, width, height);
-  
-  // Create image from SVG
-  const img = new Image();
-  img.onload = function() {
-    ctx.drawImage(img, 0, 0, width, height);
-    URL.revokeObjectURL(url);
-    
-    // Download PNG
-    const pngUrl = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = pngUrl;
-    a.download = (currentTabName || 'assembly_tree').replace(/\s+/g, '_') + '.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    setStatus('PNG downloaded!', 'success');
-    setTimeout(() => setStatus(''), 2000);
-  };
-  
-  img.onerror = function() {
-    URL.revokeObjectURL(url);
-    setStatus('PNG export failed', 'error');
-    setTimeout(() => setStatus(''), 2000);
-  };
-  
-  img.src = url;
-}
-
-function downloadSVG() {
-  const svg = document.getElementById('treeSvg');
-  if (!svg) {
-    setStatus('No tree to export', 'error');
-    return;
-  }
-  
-  // Clone SVG
-  const svgClone = svg.cloneNode(true);
-  
-  // Add white background
-  const width = svg.getAttribute('width');
-  const height = svg.getAttribute('height');
-  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  bg.setAttribute('width', width);
-  bg.setAttribute('height', height);
-  bg.setAttribute('fill', 'white');
-  svgClone.insertBefore(bg, svgClone.firstChild);
-  
-  // Add XML declaration and doctype
-  const svgData = '<?xml version="1.0" encoding="UTF-8"?>\n' + 
-    new XMLSerializer().serializeToString(svgClone);
-  
-  // Download
-  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (currentTabName || 'assembly_tree').replace(/\s+/g, '_') + '.svg';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  setStatus('SVG downloaded!', 'success');
-  setTimeout(() => setStatus(''), 2000);
+function printTree() {
+  // Trigger print dialog
+  window.print();
 }
 
 function expandAll() {
