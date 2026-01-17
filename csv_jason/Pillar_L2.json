@@ -1,74 +1,74 @@
 {
   "tabName": "Pillar_L2",
-  "savedAt": "2026-01-17T02:52:07.795Z",
+  "savedAt": "2026-01-17T11:27:10.642Z",
   "positions": {
     "Pillar": {
-      "x": 148,
-      "y": 806
+      "x": 553,
+      "y": 495
     },
     "Pillar body assy": {
-      "x": 667,
-      "y": 803
+      "x": 398,
+      "y": 371
     },
     "Coupling": {
-      "x": 364,
-      "y": 869
+      "x": 416,
+      "y": 517
     },
     "Coupling cover": {
-      "x": 352,
-      "y": 941
+      "x": 232,
+      "y": 507
     },
     "Motor mounting plate": {
-      "x": 321,
-      "y": 1010
+      "x": 326,
+      "y": 169
     },
     "Motor": {
-      "x": 503,
-      "y": 1015
+      "x": 107,
+      "y": 459
     },
     "Side strips": {
-      "x": 459,
-      "y": 587
+      "x": 155,
+      "y": 321
     },
     "Top strips": {
-      "x": 606,
-      "y": 576
+      "x": 554,
+      "y": 187
     },
     "Pillar cover": {
-      "x": 750,
-      "y": 584
+      "x": 145,
+      "y": 221
     },
     "Pillar assy": {
-      "x": 1120,
-      "y": 784
+      "x": 751,
+      "y": 367
     },
     "Vertical rail 1": {
-      "x": 1336,
-      "y": 934
+      "x": 844,
+      "y": 254
     },
     "Spacer plate": {
-      "x": 1326,
-      "y": 683
+      "x": 870,
+      "y": 490
     },
     "Vertical rail 2": {
-      "x": 1114,
-      "y": 633
+      "x": 996,
+      "y": 260
     },
     "Stopper block": {
-      "x": 1004,
-      "y": 947
+      "x": 948,
+      "y": 348
     },
     "Stopper angle bracket": {
-      "x": 940,
-      "y": 633
+      "x": 953,
+      "y": 429
     },
     "Dead weight carrier (for trail)": {
-      "x": 1400,
-      "y": 807
+      "x": 718,
+      "y": 503
     },
     "I-bolt": {
-      "x": 1172,
-      "y": 979
+      "x": 647,
+      "y": 259
     }
   }
 }
