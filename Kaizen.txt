@@ -1,8 +1,8 @@
+Is there any way to fix the children location based on the parent? Currently everything is like a balloon initially. And after that it freezes the block positions. I just want after fixing the positions of blocks if I move the parent block all the children blocks should move along with it.
+
+
+
+
 Can I write a logic such that all the sheet tabs of my google sheet will be automatically detected (google sheet tab ID) by the index.html and autogenerate the dropdown list from that.
 
 
-
-
-Lets have a discussion abour the following points before generating any code,
-1. Current tree layout is spearding across entire page when only one level 
-Download as image but the map is not fitting in it. any option for that?

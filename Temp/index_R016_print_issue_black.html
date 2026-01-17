@@ -5,7 +5,424 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Assembly Tree Viewer</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .header select {
+      padding: 5px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      min-width: 100px;
+    }
+
+    .header label {
+      font-size: 11px;
+      color: #bdc3c7;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .header-btn {
+      padding: 5px 8px;
+      font-size: 11px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .header-btn:hover {
+      background: #2980b9;
+    }
+
+    .header-btn.freeze-btn {
+      background: #9b59b6;
+    }
+
+    .header-btn.freeze-btn:hover {
+      background: #8e44ad;
+    }
+
+    .header-btn.download-btn {
+      background: #27ae60;
+    }
+
+    .header-btn.download-btn:hover {
+      background: #1e8449;
+    }
+
+    .header-btn.reset-btn {
+      background: #e74c3c;
+    }
+
+    .header-btn.reset-btn:hover {
+      background: #c0392b;
+    }
+
+    .status-text {
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 3px;
+    }
+
+    .status-text.loading {
+      color: #f39c12;
+    }
+
+    .status-text.error {
+      color: #e74c3c;
+    }
+
+    .status-text.success {
+      color: #27ae60;
+    }
+
+    .position-source {
+      background: rgba(255,255,255,0.15);
+      color: #bdc3c7;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+    }
+
+    .mobile-badge {
+      background: #e74c3c;
+      color: white;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      display: none;
+    }
+
+    /* Dropdown styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-btn {
+      background: #16a085;
+    }
+
+    .dropdown-btn:hover {
+      background: #138d75;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      min-width: 150px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      border-radius: 4px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .dropdown-content.show {
+      display: block;
+    }
+
+    .dropdown-content a {
+      color: #333;
+      padding: 10px 15px;
+      text-decoration: none;
+      display: block;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .dropdown-content a:hover {
+      background: #f0f0f0;
+    }
+
+    .legend {
+      background: white;
+      padding: 6px 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      flex-wrap: wrap;
+      font-size: 9px;
+    }
+
+    .legend-section {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .legend-title {
+      font-weight: 600;
+      color: #333;
+      font-size: 9px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 8px;
+      color: #555;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .legend-divider {
+      width: 1px;
+      height: 18px;
+      background: #ddd;
+    }
+
+    .tree-container {
+      width: 100%;
+      height: calc(100vh - 95px);
+      overflow: auto;
+      background: white;
+    }
+
+    svg {
+      display: block;
+    }
+
+    .node {
+      cursor: grab;
+    }
+
+    .node:active {
+      cursor: grabbing;
+    }
+
+    .node-shape {
+      transition: filter 0.2s, opacity 0.3s;
+    }
+
+    .node:hover .node-shape {
+      filter: brightness(0.9);
+    }
+
+    .node-label {
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .node-pn {
+      pointer-events: none;
+      fill: #666;
+      font-style: italic;
+    }
+
+    .sequence-badge {
+      font-size: 10px;
+      font-weight: bold;
+      fill: #fff;
+      pointer-events: none;
+    }
+
+    .sequence-badge-bg {
+      fill: #e74c3c;
+      stroke: #c0392b;
+      stroke-width: 1;
+    }
+
+    .toggle-icon {
+      font-weight: bold;
+      font-size: 10px;
+      fill: #333;
+      pointer-events: none;
+    }
+
+    .link {
+      fill: none;
+      transition: opacity 0.3s;
+    }
+
+    .link-label {
+      font-size: 8px;
+      pointer-events: none;
+      font-weight: 600;
+    }
+
+    .link-label-bg {
+      fill: white;
+      opacity: 0.9;
+    }
+
+    .link-label-group {
+      pointer-events: none;
+    }
+
+    .status-indicator {
+      stroke-width: 2px;
+    }
+
+    .collapse-indicator {
+      fill: white;
+      stroke: #666;
+      stroke-width: 1.5px;
+      cursor: pointer;
+    }
+
+    .collapse-indicator:hover {
+      fill: #f0f0f0;
+    }
+
+    .spine-line {
+      stroke: #78909c;
+      stroke-width: 3;
+      stroke-dasharray: 8,4;
+      opacity: 0.5;
+    }
+
+    .multi-parent-indicator {
+      fill: none;
+      stroke-width: 2px;
+    }
+
+    .desktop-only {
+      display: inline-flex;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-only {
+        display: none !important;
+      }
+      
+      .mobile-badge {
+        display: inline-block;
+      }
+      
+      .header {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      
+      .header h1 {
+        font-size: 13px;
+        width: 100%;
+      }
+      
+      .control-group {
+        padding: 3px 6px;
+      }
+      
+      .header select {
+        min-width: 80px;
+        font-size: 11px;
+        padding: 4px 6px;
+      }
+      
+      .header-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+      
+      .legend {
+        padding: 4px 8px;
+        gap: 6px;
+      }
+      
+      .tree-container {
+        height: calc(100vh - 85px);
+      }
+      
+      .node {
+        cursor: default;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      .header {
+        display: none !important;
+      }
+      
+      .legend {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #ddd;
+        padding: 5px 10px;
+        font-size: 7px;
+      }
+      
+      .tree-container {
+        height: auto !important;
+        overflow: visible !important;
+        page-break-inside: avoid;
+      }
+      
+      svg {
+        width: 100% !important;
+        height: auto !important;
+      }
+      
+      .node-shape {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .link-label-bg {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -52,7 +469,15 @@
   <button class="header-btn" onclick="refreshData()">🔄</button>
   <button class="header-btn" onclick="expandAll()">➕</button>
   <button class="header-btn" onclick="collapseAll()">➖</button>
-  <button class="header-btn" onclick="printTree()">🖨️</button>
+  
+  <div class="dropdown desktop-only">
+    <button class="header-btn dropdown-btn" onclick="toggleDropdown()">📤 Export ▼</button>
+    <div class="dropdown-content" id="exportDropdown">
+      <a href="#" onclick="downloadPNG(); return false;">📷 Download PNG</a>
+      <a href="#" onclick="downloadSVG(); return false;">📥 Download SVG</a>
+    </div>
+  </div>
+  
   <button class="header-btn freeze-btn desktop-only" onclick="freezeLayout()">❄️</button>
   <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️</button>
   <button class="header-btn reset-btn desktop-only" onclick="resetLayout()">↺</button>
@@ -714,9 +1139,117 @@ function refreshData() {
   loadAllSheets(currentSelection);
 }
 
-function printTree() {
-  // Trigger print dialog
-  window.print();
+function toggleDropdown() {
+  document.getElementById('exportDropdown').classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+window.onclick = function(event) {
+  if (!event.target.matches('.dropdown-btn')) {
+    const dropdowns = document.getElementsByClassName('dropdown-content');
+    for (let i = 0; i < dropdowns.length; i++) {
+      dropdowns[i].classList.remove('show');
+    }
+  }
+}
+
+function downloadPNG() {
+  const svg = document.getElementById('treeSvg');
+  if (!svg) {
+    setStatus('No tree to export', 'error');
+    return;
+  }
+  
+  setStatus('Generating PNG...', 'loading');
+  
+  // Get SVG dimensions
+  const svgRect = svg.getBoundingClientRect();
+  const width = parseInt(svg.getAttribute('width')) || svgRect.width;
+  const height = parseInt(svg.getAttribute('height')) || svgRect.height;
+  
+  // Clone SVG and prepare for export
+  const svgClone = svg.cloneNode(true);
+  
+  // Ensure all styles are inline for proper rendering
+  const svgData = new XMLSerializer().serializeToString(svgClone);
+  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  
+  // Create canvas
+  const canvas = document.createElement('canvas');
+  const scale = 2; // 2x resolution for better quality
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, width, height);
+  
+  // Create image from SVG
+  const img = new Image();
+  img.onload = function() {
+    ctx.drawImage(img, 0, 0, width, height);
+    URL.revokeObjectURL(url);
+    
+    // Download PNG
+    const pngUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = pngUrl;
+    a.download = (currentTabName || 'assembly_tree').replace(/\s+/g, '_') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    setStatus('PNG downloaded!', 'success');
+    setTimeout(() => setStatus(''), 2000);
+  };
+  
+  img.onerror = function() {
+    URL.revokeObjectURL(url);
+    setStatus('PNG export failed', 'error');
+    setTimeout(() => setStatus(''), 2000);
+  };
+  
+  img.src = url;
+}
+
+function downloadSVG() {
+  const svg = document.getElementById('treeSvg');
+  if (!svg) {
+    setStatus('No tree to export', 'error');
+    return;
+  }
+  
+  // Clone SVG
+  const svgClone = svg.cloneNode(true);
+  
+  // Add white background
+  const width = svg.getAttribute('width');
+  const height = svg.getAttribute('height');
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('width', width);
+  bg.setAttribute('height', height);
+  bg.setAttribute('fill', 'white');
+  svgClone.insertBefore(bg, svgClone.firstChild);
+  
+  // Add XML declaration and doctype
+  const svgData = '<?xml version="1.0" encoding="UTF-8"?>\n' + 
+    new XMLSerializer().serializeToString(svgClone);
+  
+  // Download
+  const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (currentTabName || 'assembly_tree').replace(/\s+/g, '_') + '.svg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  setStatus('SVG downloaded!', 'success');
+  setTimeout(() => setStatus(''), 2000);
 }
 
 function expandAll() {
@@ -864,22 +1397,11 @@ async function renderGraph(tabName) {
   const svg = d3.select('#treeSvg').attr('width', width).attr('height', height);
   
   // Arrow marker
-  svg.append('defs')
-  .append('marker')
-  .attr('id', 'arrowhead')
-  .attr('viewBox', '0 -5 10 10')
-  .attr('refX', 12)
-  .attr('refY', 0)
-  .attr('orient', 'auto')
-  .attr('markerWidth', 5)
-  .attr('markerHeight', 5)
-  .attr('markerUnits', 'strokeWidth')
-  .append('path')
-  .attr('d', 'M 0,-5 L 10,0 L 0,5 Z')
-  .attr('fill', 'none')
-  .attr('stroke', 'currentColor')
-  .attr('stroke-width', 1.5)
-  .attr('stroke-linejoin', 'round');
+  svg.append('defs').append('marker')
+    .attr('id', 'arrowhead').attr('viewBox', '-0 -5 10 10')
+    .attr('refX', 16).attr('refY', 0).attr('orient', 'auto')
+    .attr('markerWidth', 5).attr('markerHeight', 5)
+    .append('path').attr('d', 'M 0,-5 L 10,0 L 0,5').attr('fill', '#888');
   
   const g = svg.append('g').attr('class', 'main');
   
@@ -973,15 +1495,6 @@ async function renderGraph(tabName) {
   }
   
   // Draw links
-  const linkElements = g.selectAll('.link').data(simLinks).enter()
-    .append('path')
-    .attr('class', 'link')
-    .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
-    .attr('stroke-width', 1.5)
-    .attr('stroke-linecap', 'round')     // ✅ ADD
-    .attr('stroke-linejoin', 'round')    // ✅ ADD
-    .attr('marker-end', 'url(#arrowhead)');
-
   const linkElements = g.selectAll('.link').data(simLinks).enter()
     .append('path').attr('class', 'link')
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
