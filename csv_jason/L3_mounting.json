@@ -1,62 +1,82 @@
 {
   "tabName": "L3_mounting",
-  "savedAt": "2026-01-17T02:46:54.278Z",
+  "savedAt": "2026-01-17T11:12:21.266Z",
   "positions": {
     "Pillar → Base assy": {
-      "x": 155,
-      "y": 434
+      "x": 288,
+      "y": 711
     },
     "L3 mounting plate 1": {
-      "x": 378,
-      "y": 432
+      "x": 506,
+      "y": 710
     },
     "L3 mounting plate 2": {
-      "x": 636,
-      "y": 428
+      "x": 721,
+      "y": 709
     },
     "L3 assy": {
-      "x": 1078,
-      "y": 435
+      "x": 1072,
+      "y": 702
     },
     "L3 motor mounting block L": {
-      "x": 688,
-      "y": 209
+      "x": 717,
+      "y": 465
     },
     "L3 motor mounting assy": {
-      "x": 933,
-      "y": 243
+      "x": 857,
+      "y": 596
     },
     "L3 motor mounting block R": {
-      "x": 955,
-      "y": 103
+      "x": 626,
+      "y": 544
     },
     "L3 motor mounting plate": {
-      "x": 718,
-      "y": 104
+      "x": 980,
+      "y": 486
     },
     "Rack gear": {
-      "x": 1115,
-      "y": 273
+      "x": 1371,
+      "y": 586
     },
     "Arm assy": {
-      "x": 1185,
-      "y": 603
+      "x": 1157,
+      "y": 842
     },
-    "Cable carrier mounting plate 1": {
-      "x": 761,
-      "y": 564
+    "A3 motor mounting": {
+      "x": 1019,
+      "y": 946
+    },
+    "A2 electronic box": {
+      "x": 954,
+      "y": 797
+    },
+    "Cable carrier mounting plate 4": {
+      "x": 1237,
+      "y": 952
+    },
+    "L3 Cable carrier mounting plate 1": {
+      "x": 1293,
+      "y": 786
+    },
+    "L3 Cable carrier mounting plate 2": {
+      "x": 1201,
+      "y": 542
+    },
+    "L3 Cable carrier mounting plate 3": {
+      "x": 893,
+      "y": 862
     },
     "Cable carrier mounting plate 2": {
-      "x": 939,
-      "y": 602
+      "x": 759,
+      "y": 969
     },
-    "Cable carrier mounting plate 3": {
-      "x": 756,
-      "y": 664
+    "EOAT": {
+      "x": 76,
+      "y": 666
     },
     "L3 → pillar assy": {
-      "x": 1410,
-      "y": 434
+      "x": 1372,
+      "y": 700
     }
   }
 }

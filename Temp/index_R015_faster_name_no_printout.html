@@ -243,16 +243,7 @@
     .link-label {
       font-size: 8px;
       pointer-events: none;
-      font-weight: 600;
-    }
-
-    .link-label-bg {
-      fill: white;
-      opacity: 0.9;
-    }
-
-    .link-label-group {
-      pointer-events: none;
+      font-weight: 500;
     }
 
     .status-indicator {
@@ -333,51 +324,6 @@
         cursor: default;
       }
     }
-
-    /* Print styles */
-    @media print {
-      body {
-        background: white !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      
-      .header {
-        display: none !important;
-      }
-      
-      .legend {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        border-top: 1px solid #ddd;
-        padding: 5px 10px;
-        font-size: 7px;
-      }
-      
-      .tree-container {
-        height: auto !important;
-        overflow: visible !important;
-        page-break-inside: avoid;
-      }
-      
-      svg {
-        width: 100% !important;
-        height: auto !important;
-      }
-      
-      .node-shape {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-
-      .link-label-bg {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-    }
   </style>
 </head>
 <body>
@@ -425,7 +371,6 @@
   <button class="header-btn" onclick="refreshData()">🔄</button>
   <button class="header-btn" onclick="expandAll()">➕</button>
   <button class="header-btn" onclick="collapseAll()">➖</button>
-  <button class="header-btn" onclick="printTree()">🖨️</button>
   <button class="header-btn freeze-btn desktop-only" onclick="freezeLayout()">❄️</button>
   <button class="header-btn download-btn desktop-only" onclick="downloadPositions()">⬇️</button>
   <button class="header-btn reset-btn desktop-only" onclick="resetLayout()">↺</button>
@@ -489,12 +434,12 @@ const GOOGLE_SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
 const POSITIONS_BASE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/positions/";
 
 const SHEET_TABS = [
-  { name: "Logi_base_L1", gid: "1604202891" },
+  { name: "Logi_base_L1", gid: "729206597" },
   { name: "Pillar_L2", gid: "0" },
   { name: "1-2_Pillar_mounting", gid: "207097345" },
-  { name: "L3", gid: "56854072" },
+  { name: "L3_to_pillar", gid: "486648295" },
   { name: "L3_mounting", gid: "180536805" },
-  { name: "Motor_mountings", gid: "1949211141" }
+  { name: "Cable_carrier_motor_mounting", gid: "1949211141" }
 ];
 
 function getSheetUrl(gid) {
@@ -1033,7 +978,7 @@ async function loadSheetData(tabConfig) {
   return csvToDAG(parseCSV(csvText));
 }
 
-async function loadAllSheets(previousSelection = null) {
+async function loadAllSheets() {
   const select = document.getElementById('fileSelect');
   setStatus('Loading...');
   select.innerHTML = '<option value="">Loading...</option>';
@@ -1044,7 +989,6 @@ async function loadAllSheets(previousSelection = null) {
   
   select.innerHTML = '';
   let firstValidTab = null;
-  let selectionToRestore = null;
   
   results.forEach((result, idx) => {
     const tab = SHEET_TABS[idx];
@@ -1054,42 +998,24 @@ async function loadAllSheets(previousSelection = null) {
       option.value = tab.name;
       option.textContent = result.value.graphData.finalName || tab.name;
       select.appendChild(option);
-      
       if (!firstValidTab) firstValidTab = tab.name;
-      
-      // Check if this was the previous selection
-      if (previousSelection && tab.name === previousSelection) {
-        selectionToRestore = tab.name;
-      }
     }
   });
   
   if (firstValidTab) {
     setStatus('');
-    // Restore previous selection if available, otherwise use first tab
-    const tabToSelect = selectionToRestore || firstValidTab;
-    select.value = tabToSelect;
-    renderGraph(tabToSelect);
+    select.value = firstValidTab;
+    renderGraph(firstValidTab);
   } else {
     setStatus('No data', 'error');
   }
 }
 
 function refreshData() {
-  // Remember current selection
-  const currentSelection = document.getElementById('fileSelect').value;
-  
   loadedData = {};
   collapsedNodes.clear();
   if (simulation) simulation.stop();
-  
-  // Reload and restore selection
-  loadAllSheets(currentSelection);
-}
-
-function printTree() {
-  // Trigger print dialog
-  window.print();
+  loadAllSheets();
 }
 
 function expandAll() {
@@ -1340,36 +1266,12 @@ async function renderGraph(tabName) {
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
     .attr('stroke-width', 1.5).attr('marker-end', 'url(#arrowhead)');
   
-  // Draw link labels with white background
-  const linkLabelGroups = g.selectAll('.link-label-group').data(simLinks.filter(l => l.fastener)).enter()
-    .append('g').attr('class', 'link-label-group');
-  
-  // White background rectangle (will be sized after text is added)
-  linkLabelGroups.append('rect')
-    .attr('class', 'link-label-bg')
-    .attr('fill', 'white')
-    .attr('rx', 2)
-    .attr('ry', 2);
-  
-  // Label text
-  linkLabelGroups.append('text')
-    .attr('class', 'link-label')
-    .attr('text-anchor', 'middle')
+  // Draw link labels - offset above the line
+  const linkLabels = g.selectAll('.link-label').data(simLinks.filter(l => l.fastener)).enter()
+    .append('text').attr('class', 'link-label').attr('text-anchor', 'middle')
     .attr('fill', d => getFastenerColor(d.fastener) || '#666')
-    .attr('dy', '0.35em')
+    .attr('dy', '-8')
     .text(d => d.fastenerQty ? `${d.fastener}×${d.fastenerQty}` : d.fastener);
-  
-  // Size the background rectangles to fit text
-  linkLabelGroups.each(function() {
-    const group = d3.select(this);
-    const text = group.select('text');
-    const bbox = text.node().getBBox();
-    group.select('rect')
-      .attr('x', bbox.x - 3)
-      .attr('y', bbox.y - 1)
-      .attr('width', bbox.width + 6)
-      .attr('height', bbox.height + 2);
-  });
   
   // Draw nodes
   const nodeElements = g.selectAll('.node').data(visibleNodes).enter()
@@ -1478,7 +1380,7 @@ async function renderGraph(tabName) {
       return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
     });
     
-    linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
+    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 12);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   });
   
@@ -1491,7 +1393,7 @@ async function renderGraph(tabName) {
       const mx = (sx + tx) / 2;
       return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
     });
-    linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
+    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 12);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   }
 }
