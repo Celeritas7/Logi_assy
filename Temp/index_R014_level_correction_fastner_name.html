@@ -659,8 +659,8 @@ function updatePositionSource(source) {
 
 function calculateNodeHeight(name, partNumber) {
   const lines = Math.ceil(name.length / 13);
-  let h = lines <= 1 ? 36 : (lines === 2 ? 44 : 52);
-  if (partNumber) h += 12;
+  let h = lines <= 1 ? 38 : (lines === 2 ? 48 : 56);
+  if (partNumber) h += 10;
   return h;
 }
 
@@ -679,17 +679,6 @@ function wrapText(text, maxChars) {
   if (line) lines.push(line);
   if (lines.length > 3) { lines.length = 3; lines[2] = lines[2].substring(0, maxChars - 3) + '...'; }
   return lines;
-}
-
-function calculateFontSize(name, hasPartNumber, nodeHeight) {
-  // Larger font when no part number
-  const baseSize = hasPartNumber ? 9 : 11;
-  const nameLength = name.length;
-  
-  if (nameLength <= 10) return hasPartNumber ? 10 : 13;
-  if (nameLength <= 15) return hasPartNumber ? 9 : 12;
-  if (nameLength <= 20) return hasPartNumber ? 9 : 11;
-  return baseSize;
 }
 
 // ==================================================
@@ -819,51 +808,54 @@ function csvToDAG(csvData) {
   
   if (!finalNodeName) return null;
   
-  // Calculate levels based on parent's level - 1
-  // FINAL = Level 8, then work backwards
+  // Calculate levels (BFS from final)
+  const queue = [{ name: finalNodeName, distance: 0 }];
+  const visited = new Set();
+  let maxDistance = 0;
+  
+  while (queue.length > 0) {
+    const { name, distance } = queue.shift();
+    if (visited.has(name)) continue;
+    visited.add(name);
+    
+    const node = nodes.get(name);
+    if (node) {
+      node.distance = distance;
+      maxDistance = Math.max(maxDistance, distance);
+      node.receivesFrom.forEach(src => {
+        if (!visited.has(src)) queue.push({ name: src, distance: distance + 1 });
+      });
+    }
+  }
+  
+  // Convert distance to level (1-8)
+  nodes.forEach(n => {
+    if (n.distance !== undefined) {
+      const rawLevel = maxDistance - n.distance + 1;
+      n.level = Math.max(1, Math.min(8, Math.ceil(rawLevel * 8 / (maxDistance + 1))));
+    }
+  });
+  
+  // Final = level 8
   const finalNode = nodes.get(finalNodeName);
   if (finalNode) finalNode.level = 8;
   
-  // Use BFS from final, going backwards through receivesFrom
-  // Each child's level = parent's level - 1
-  const queue = [finalNodeName];
-  const visited = new Set([finalNodeName]);
-  
-  while (queue.length > 0) {
-    const name = queue.shift();
-    const node = nodes.get(name);
-    if (!node) continue;
-    
-    // All nodes that feed INTO this node get level = this node's level - 1
-    node.receivesFrom.forEach(childName => {
-      const childNode = nodes.get(childName);
-      if (childNode) {
-        // If child already has a level, take the maximum (closest to final)
-        const newLevel = Math.max(1, node.level - 1);
-        if (childNode.level === -1 || newLevel > childNode.level) {
-          childNode.level = newLevel;
-        }
-        
-        if (!visited.has(childName)) {
-          visited.add(childName);
-          queue.push(childName);
-        }
-      }
-    });
-  }
-  
-  // Handle orphans and unvisited nodes
+  // Handle orphans
   nodes.forEach(n => {
-    if (n.level === -1) {
-      // Check what this node goes into
-      let maxTargetLevel = 0;
+    if (n.level === -1 || n.distance === undefined) {
+      let minLevel = Infinity;
       n.goesInto.forEach(t => {
         const target = nodes.get(t);
-        if (target && target.level > 0) {
-          maxTargetLevel = Math.max(maxTargetLevel, target.level);
-        }
+        if (target && target.level > 0) minLevel = Math.min(minLevel, target.level);
       });
-      n.level = maxTargetLevel > 0 ? Math.max(1, maxTargetLevel - 1) : 1;
+      n.level = minLevel !== Infinity ? Math.max(1, minLevel - 1) : 1;
+    }
+  });
+  
+  // Parts = level 1-2
+  nodes.forEach(n => {
+    if (n.receivesFrom.length === 0 && !n.isFinal) {
+      n.level = Math.min(n.level, 2);
     }
   });
   
@@ -1266,11 +1258,10 @@ async function renderGraph(tabName) {
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
     .attr('stroke-width', 1.5).attr('marker-end', 'url(#arrowhead)');
   
-  // Draw link labels - offset above the line
+  // Draw link labels
   const linkLabels = g.selectAll('.link-label').data(simLinks.filter(l => l.fastener)).enter()
     .append('text').attr('class', 'link-label').attr('text-anchor', 'middle')
     .attr('fill', d => getFastenerColor(d.fastener) || '#666')
-    .attr('dy', '-8')
     .text(d => d.fastenerQty ? `${d.fastener}×${d.fastenerQty}` : d.fastener);
   
   // Draw nodes
@@ -1329,15 +1320,14 @@ async function renderGraph(tabName) {
       .text(badge);
   });
   
-  // Node labels with dynamic font size
+  // Node labels
   nodeElements.each(function(d) {
     const group = d3.select(this);
-    const hasPN = d.partNumber && d.partNumber.length > 0;
-    const fontSize = calculateFontSize(d.name, hasPN, d.height);
-    const lines = wrapText(d.name, 14);
+    const fontSize = Math.max(8, 11 - Math.floor(d.name.length / 15));
+    const lines = wrapText(d.name, 13);
     const lineHeight = fontSize + 2;
     const totalH = lines.length * lineHeight;
-    const startY = hasPN ? -totalH/2 - 4 : -totalH/2 + lineHeight/2;
+    const startY = d.partNumber ? -totalH/2 - 2 : -totalH/2 + lineHeight/2;
     
     lines.forEach((line, i) => {
       group.append('text').attr('class', 'node-label')
@@ -1345,11 +1335,11 @@ async function renderGraph(tabName) {
         .attr('font-size', fontSize + 'px').text(line);
     });
     
-    if (hasPN) {
+    if (d.partNumber) {
       group.append('text').attr('class', 'node-pn')
-        .attr('text-anchor', 'middle').attr('y', startY + lines.length * lineHeight + 4)
+        .attr('text-anchor', 'middle').attr('y', startY + lines.length * lineHeight + 2)
         .attr('font-size', '7px')
-        .text(d.partNumber.length > 14 ? d.partNumber.substring(0, 12) + '..' : d.partNumber);
+        .text(d.partNumber.length > 12 ? d.partNumber.substring(0, 10) + '..' : d.partNumber);
     }
   });
   
@@ -1380,7 +1370,7 @@ async function renderGraph(tabName) {
       return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
     });
     
-    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 12);
+    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 5);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   });
   
@@ -1393,7 +1383,7 @@ async function renderGraph(tabName) {
       const mx = (sx + tx) / 2;
       return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
     });
-    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 12);
+    linkLabels.attr('x', d => (d.source.x + d.target.x)/2).attr('y', d => (d.source.y + d.target.y)/2 - 5);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   }
 }

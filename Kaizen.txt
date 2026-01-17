@@ -1,5 +1,3 @@
-Want the font of the text filling the box when no P/N is available for that part. Also can I order the children blocks surrounding the parent in a sequence given in the google sheets?
-
 
 Want the layout of tree ready for the printout. Is there any option with which I can do it?
 
