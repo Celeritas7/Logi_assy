@@ -280,8 +280,9 @@
     }
 
     .link {
-      fill: none;
-      transition: opacity 0.3s;
+      fill: none !important;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .link-label {
@@ -828,6 +829,87 @@ function parseCSVLine(line) {
   }
   result.push(current);
   return result;
+}
+
+// ==================================================
+// LINK PATH CALCULATION WITH DYNAMIC ENDPOINTS
+// ==================================================
+function calculateLinkPath(source, target, nodeWidth) {
+  const sourceW = nodeWidth / 2;
+  const sourceH = source.height / 2;
+  const targetW = nodeWidth / 2;
+  const targetH = target.height / 2;
+  
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  
+  // Determine exit point on source
+  let sx, sy;
+  if (dx >= 0) {
+    // Target is to the right - exit from right side
+    sx = source.x + sourceW;
+    // Calculate y offset based on angle
+    const ratio = Math.abs(dy) / Math.max(Math.abs(dx), 1);
+    sy = source.y + (dy > 0 ? 1 : -1) * Math.min(sourceH * 0.8, sourceH * ratio);
+  } else {
+    // Target is to the left - exit from left side
+    sx = source.x - sourceW;
+    const ratio = Math.abs(dy) / Math.max(Math.abs(dx), 1);
+    sy = source.y + (dy > 0 ? 1 : -1) * Math.min(sourceH * 0.8, sourceH * ratio);
+  }
+  
+  // Determine entry point on target
+  let tx, ty;
+  if (dx >= 0) {
+    // Coming from left - enter from left side
+    tx = target.x - targetW;
+    const ratio = Math.abs(dy) / Math.max(Math.abs(dx), 1);
+    ty = target.y - (dy > 0 ? 1 : -1) * Math.min(targetH * 0.8, targetH * ratio);
+  } else {
+    // Coming from right - enter from right side
+    tx = target.x + targetW;
+    const ratio = Math.abs(dy) / Math.max(Math.abs(dx), 1);
+    ty = target.y - (dy > 0 ? 1 : -1) * Math.min(targetH * 0.8, targetH * ratio);
+  }
+  
+  // For steep angles, use top/bottom instead
+  if (Math.abs(dy) > Math.abs(dx) * 2) {
+    if (dy > 0) {
+      // Target is below
+      sy = source.y + sourceH;
+      ty = target.y - targetH;
+      sx = source.x + (dx > 0 ? 1 : -1) * Math.min(sourceW * 0.5, sourceW * Math.abs(dx) / Math.abs(dy));
+      tx = target.x - (dx > 0 ? 1 : -1) * Math.min(targetW * 0.5, targetW * Math.abs(dx) / Math.abs(dy));
+    } else {
+      // Target is above
+      sy = source.y - sourceH;
+      ty = target.y + targetH;
+      sx = source.x + (dx > 0 ? 1 : -1) * Math.min(sourceW * 0.5, sourceW * Math.abs(dx) / Math.abs(dy));
+      tx = target.x - (dx > 0 ? 1 : -1) * Math.min(targetW * 0.5, targetW * Math.abs(dx) / Math.abs(dy));
+    }
+  }
+  
+  // Bezier control points
+  const midX = (sx + tx) / 2;
+  const midY = (sy + ty) / 2;
+  
+  // Adjust curve based on direction
+  let cx1, cy1, cx2, cy2;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    // Mostly horizontal
+    cx1 = midX;
+    cy1 = sy;
+    cx2 = midX;
+    cy2 = ty;
+  } else {
+    // Mostly vertical
+    cx1 = sx + (tx - sx) * 0.3;
+    cy1 = sy + (ty - sy) * 0.5;
+    cx2 = sx + (tx - sx) * 0.7;
+    cy2 = sy + (ty - sy) * 0.5;
+  }
+  
+  return `M ${sx},${sy} C ${cx1},${cy1} ${cx2},${cy2} ${tx},${ty}`;
 }
 
 // ==================================================
@@ -1396,23 +1478,12 @@ async function renderGraph(tabName) {
   
   const svg = d3.select('#treeSvg').attr('width', width).attr('height', height);
   
-  // Arrow marker
-  svg.append('defs')
-    .append('marker')
-    .attr('id', 'arrowhead')
-    .attr('viewBox', '0 -5 10 10')
-    .attr('refX', 12)
-    .attr('refY', 0)
-    .attr('orient', 'auto')
-    .attr('markerWidth', 5)
-    .attr('markerHeight', 5)
-    .attr('markerUnits', 'strokeWidth')
-    .append('path')
-    .attr('d', 'M 0,-5 L 10,0 L 0,5 Z')
-    .attr('fill', 'none')
-    .attr('stroke', 'currentColor')
-    .attr('stroke-width', 1.5)
-    .attr('stroke-linejoin', 'round');
+  // Arrow marker - refX adjusted for endpoint at node edge
+  svg.append('defs').append('marker')
+    .attr('id', 'arrowhead').attr('viewBox', '-0 -5 10 10')
+    .attr('refX', 8).attr('refY', 0).attr('orient', 'auto')
+    .attr('markerWidth', 6).attr('markerHeight', 6)
+    .append('path').attr('d', 'M 0,-4 L 8,0 L 0,4').attr('fill', '#666');
   
   const g = svg.append('g').attr('class', 'main');
   
@@ -1505,14 +1576,12 @@ async function renderGraph(tabName) {
     }).strength(d => d.group !== 0 ? 0.05 : 0));
   }
   
-  // Draw links
+  // Draw links with dynamic endpoints
   const linkElements = g.selectAll('.link').data(simLinks).enter()
-    .append('path')
-    .attr('class', 'link')
+    .append('path').attr('class', 'link')
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
     .attr('stroke-width', 1.5)
-    .attr('stroke-linecap', 'round')     // ✅ ADD
-    .attr('stroke-linejoin', 'round')    // ✅ ADD
+    .attr('fill', 'none')
     .attr('marker-end', 'url(#arrowhead)');
   
   // Draw link labels with white background
@@ -1646,12 +1715,7 @@ async function renderGraph(tabName) {
       n.y = Math.max(n.height/2 + 10, Math.min(height - n.height/2 - 10, n.y));
     });
     
-    linkElements.attr('d', d => {
-      const sx = d.source.x + NODE_WIDTH/2, sy = d.source.y;
-      const tx = d.target.x - NODE_WIDTH/2, ty = d.target.y;
-      const mx = (sx + tx) / 2;
-      return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
-    });
+    linkElements.attr('d', d => calculateLinkPath(d.source, d.target, NODE_WIDTH));
     
     linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
@@ -1660,12 +1724,7 @@ async function renderGraph(tabName) {
   if (!useSimulation) {
     simulation.alpha(0).stop();
     simulation.tick();
-    linkElements.attr('d', d => {
-      const sx = d.source.x + NODE_WIDTH/2, sy = d.source.y;
-      const tx = d.target.x - NODE_WIDTH/2, ty = d.target.y;
-      const mx = (sx + tx) / 2;
-      return `M ${sx},${sy} C ${mx},${sy} ${mx},${ty} ${tx},${ty}`;
-    });
+    linkElements.attr('d', d => calculateLinkPath(d.source, d.target, NODE_WIDTH));
     linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   }
