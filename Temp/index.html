@@ -260,10 +260,16 @@
     }
 
     .sequence-badge {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: bold;
-      fill: #e74c3c;
+      fill: #000000;
       pointer-events: none;
+    }
+
+    .sequence-badge-bg {
+      fill: #e74d3c00;
+      stroke: #00000000;
+      stroke-width: 1;
     }
 
     .toggle-icon {
@@ -536,10 +542,11 @@ const GOOGLE_SHEET_ID = "1oDuEttMeDCvnK7WIAyYfYgfyls6Y05UZZzZw72VHERo";
 const POSITIONS_BASE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/positions/";
 
 const SHEET_TABS = [
-  { name: "Logi_base_L1", gid: "1604202891" },
+  { name: "Logi_base_L1", gid: "729206597" },
   { name: "Pillar_L2", gid: "0" },
   { name: "1-2_Pillar_mounting", gid: "207097345" },
   { name: "L3", gid: "56854072" },
+  { name: "L3_to_pillar", gid: "486648295" },
   { name: "L3_mounting", gid: "180536805" },
   { name: "Motor_mountings", gid: "1949211141" }
 ];
@@ -1246,31 +1253,7 @@ function downloadPNG() {
   // Clone SVG and prepare for export
   const svgClone = svg.cloneNode(true);
   
-  // Add inline styles for export
-  const styleElement = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  styleElement.textContent = `
-    .link { fill: none !important; }
-    .node-shape { }
-    .link-label-bg { fill: white; opacity: 0.9; }
-    .collapse-indicator { fill: white; stroke: #666; }
-    .status-indicator { stroke-width: 2px; }
-    .sequence-badge { fill: #e74c3c; font-weight: bold; }
-    text { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-  `;
-  svgClone.insertBefore(styleElement, svgClone.firstChild);
-  
-  // Add white background
-  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  bg.setAttribute('width', width);
-  bg.setAttribute('height', height);
-  bg.setAttribute('fill', 'white');
-  svgClone.insertBefore(bg, svgClone.firstChild);
-  
-  // Ensure all links have fill="none" explicitly
-  svgClone.querySelectorAll('.link').forEach(link => {
-    link.setAttribute('fill', 'none');
-  });
-  
+  // Ensure all styles are inline for proper rendering
   const svgData = new XMLSerializer().serializeToString(svgClone);
   const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(svgBlob);
@@ -1332,26 +1315,6 @@ function downloadSVG() {
   bg.setAttribute('height', height);
   bg.setAttribute('fill', 'white');
   svgClone.insertBefore(bg, svgClone.firstChild);
-  
-  // Add inline styles for export
-  const styleElement = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-  styleElement.textContent = `
-    .link { fill: none !important; stroke-linecap: round; stroke-linejoin: round; }
-    .link-label-bg { fill: white; opacity: 0.9; }
-    .collapse-indicator { fill: white; stroke: #666; stroke-width: 1.5px; }
-    .status-indicator { stroke-width: 2px; }
-    .sequence-badge { fill: #e74c3c; font-size: 12px; font-weight: bold; }
-    .node-label { font-weight: 500; }
-    .node-pn { fill: #666; font-style: italic; }
-    .link-label { font-size: 8px; font-weight: 600; }
-    text { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-  `;
-  svgClone.insertBefore(styleElement, bg.nextSibling);
-  
-  // Ensure all links have fill="none" explicitly
-  svgClone.querySelectorAll('.link').forEach(link => {
-    link.setAttribute('fill', 'none');
-  });
   
   // Add XML declaration and doctype
   const svgData = '<?xml version="1.0" encoding="UTF-8"?>\n' + 
@@ -1701,9 +1664,10 @@ async function renderGraph(tabName) {
     if (!badge) return;
     
     const group = d3.select(this);
-    // Just the badge text, no background circle
+    group.append('circle').attr('class', 'sequence-badge-bg')
+      .attr('cx', NODE_WIDTH/2 - 8).attr('cy', -d.height/2 + 8).attr('r', 8);
     group.append('text').attr('class', 'sequence-badge')
-      .attr('x', NODE_WIDTH/2 - 6).attr('y', -d.height/2 - 2)
+      .attr('x', NODE_WIDTH/2 - 8).attr('y', -d.height/2 + 8)
       .attr('text-anchor', 'middle').attr('dy', '0.35em')
       .text(badge);
   });
