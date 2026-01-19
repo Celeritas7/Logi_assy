@@ -663,27 +663,7 @@ let currentColorMode = 'level';
 
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 const STORAGE_PREFIX = 'assembly_tree_';
-const NODE_WIDTH_BASE = 120;
-const NODE_WIDTH_MAX = 160;
-
-function calculateNodeWidth(name, partNumber) {
-  let width = NODE_WIDTH_BASE;
-  
-  // Check name length
-  const nameLen = name.length;
-  if (nameLen > 15) width = Math.max(width, 130);
-  if (nameLen > 20) width = Math.max(width, 140);
-  
-  // Check part number length
-  if (partNumber) {
-    const pnLen = partNumber.length;
-    if (pnLen > 12) width = Math.max(width, 135);
-    if (pnLen > 15) width = Math.max(width, 145);
-    if (pnLen > 18) width = Math.max(width, 155);
-  }
-  
-  return Math.min(width, NODE_WIDTH_MAX);
-}
+const NODE_WIDTH = 120;
 
 function getStorageKey(tabName) {
   return STORAGE_PREFIX + tabName.replace(/\s+/g, '_');
@@ -848,10 +828,10 @@ function parseCSVLine(line) {
 // ==================================================
 // LINK PATH CALCULATION WITH DYNAMIC ENDPOINTS
 // ==================================================
-function calculateLinkPath(source, target) {
-  const sourceW = source.width / 2;
+function calculateLinkPath(source, target, nodeWidth) {
+  const sourceW = nodeWidth / 2;
   const sourceH = source.height / 2;
-  const targetW = target.width / 2;
+  const targetW = nodeWidth / 2;
   const targetH = target.height / 2;
   
   const dx = target.x - source.x;
@@ -963,7 +943,6 @@ function csvToDAG(csvData) {
         fastener: row.Fastener || '',
         fastenerQty: parseInt(row.Fastener_Qty) || 0,
         height: calculateNodeHeight(childName, partNumber),
-        width: calculateNodeWidth(childName, partNumber),
         x: 0, y: 0
       });
     }
@@ -990,10 +969,7 @@ function csvToDAG(csvData) {
           id: parentName, name: parentName, partNumber: '', status: '',
           group: null, sequence: '', sequenceNum: null, level: -1,
           goesInto: [], receivesFrom: [], isOrphan: false, isFinal: false, isSpine: false,
-          fastener: '', fastenerQty: 0, 
-          height: calculateNodeHeight(parentName, ''),
-          width: calculateNodeWidth(parentName, ''),
-          x: 0, y: 0
+          fastener: '', fastenerQty: 0, height: calculateNodeHeight(parentName, ''), x: 0, y: 0
         });
       }
       
@@ -1276,12 +1252,9 @@ function downloadPNG() {
     .link { fill: none !important; }
     .node-shape { }
     .link-label-bg { fill: white; opacity: 0.9; }
-    .link-label { font-size: 8px; font-weight: 600; }
     .collapse-indicator { fill: white; stroke: #666; }
     .status-indicator { stroke-width: 2px; }
-    .sequence-badge { fill: #e74c3c; font-size: 11px; font-weight: bold; }
-    .node-label { font-weight: 500; }
-    .node-pn { fill: #666; font-style: italic; font-size: 7px; }
+    .sequence-badge { fill: #e74c3c; font-weight: bold; }
     text { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
   `;
   svgClone.insertBefore(styleElement, svgClone.firstChild);
@@ -1607,8 +1580,8 @@ async function renderGraph(tabName) {
   
   // Draw spine line
   if (spineNodes.length > 1) {
-    const spineX1 = spineNodes[0].x - spineNodes[0].width/2 - 20;
-    const spineX2 = spineNodes[spineNodes.length - 1].x + spineNodes[spineNodes.length - 1].width/2 + 20;
+    const spineX1 = spineNodes[0].x - NODE_WIDTH/2 - 20;
+    const spineX2 = spineNodes[spineNodes.length - 1].x + NODE_WIDTH/2 + 20;
     g.append('line').attr('class', 'spine-line')
       .attr('x1', spineX1).attr('y1', centerY)
       .attr('x2', spineX2).attr('y2', centerY);
@@ -1618,7 +1591,7 @@ async function renderGraph(tabName) {
   simulation = d3.forceSimulation(visibleNodes)
     .force('link', d3.forceLink(simLinks).id(d => d.name).distance(120).strength(0.3))
     .force('charge', d3.forceManyBody().strength(-200))
-    .force('collide', d3.forceCollide().radius(d => Math.max(d.width, d.height)/2 + 10).strength(0.8))
+    .force('collide', d3.forceCollide().radius(d => Math.max(NODE_WIDTH, d.height)/2 + 10).strength(0.8))
     .alphaDecay(0.03).velocityDecay(0.4);
   
   if (useSimulation) {
@@ -1712,13 +1685,13 @@ async function renderGraph(tabName) {
       fill = LEVEL_COLORS[Math.min(d.level - 1, 7)];
     }
     const stroke = darkenColor(fill);
-    drawShape(d3.select(this), shape, d.width, d.height, fill, stroke, d.isMultiParent, d.isOrphan);
+    drawShape(d3.select(this), shape, NODE_WIDTH, d.height, fill, stroke, d.isMultiParent, d.isOrphan);
   });
   
   // Status indicator
   nodeElements.filter(d => d.status).append('circle')
     .attr('class', 'status-indicator')
-    .attr('cx', d => -d.width/2 + 8).attr('cy', d => -d.height/2 + 8).attr('r', 4)
+    .attr('cx', -NODE_WIDTH/2 + 8).attr('cy', d => -d.height/2 + 8).attr('r', 4)
     .attr('fill', d => getStatusColor(d.status)?.fill || '#bdc3c7')
     .attr('stroke', d => getStatusColor(d.status)?.stroke || '#95a5a6');
   
@@ -1730,7 +1703,7 @@ async function renderGraph(tabName) {
     const group = d3.select(this);
     // Just the badge text, no background circle
     group.append('text').attr('class', 'sequence-badge')
-      .attr('x', d.width/2 - 6).attr('y', -d.height/2 - 2)
+      .attr('x', NODE_WIDTH/2 - 6).attr('y', -d.height/2 - 2)
       .attr('text-anchor', 'middle').attr('dy', '0.35em')
       .text(badge);
   });
@@ -1740,9 +1713,7 @@ async function renderGraph(tabName) {
     const group = d3.select(this);
     const hasPN = d.partNumber && d.partNumber.length > 0;
     const fontSize = calculateFontSize(d.name, hasPN, d.height);
-    // Calculate max chars based on node width
-    const maxChars = Math.floor(d.width / 8);
-    const lines = wrapText(d.name, maxChars);
+    const lines = wrapText(d.name, 14);
     const lineHeight = fontSize + 2;
     const totalH = lines.length * lineHeight;
     const startY = hasPN ? -totalH/2 - 4 : -totalH/2 + lineHeight/2;
@@ -1754,13 +1725,10 @@ async function renderGraph(tabName) {
     });
     
     if (hasPN) {
-      // Calculate max P/N chars based on width
-      const maxPNChars = Math.floor(d.width / 6);
-      const pnText = d.partNumber.length > maxPNChars ? d.partNumber.substring(0, maxPNChars - 2) + '..' : d.partNumber;
       group.append('text').attr('class', 'node-pn')
         .attr('text-anchor', 'middle').attr('y', startY + lines.length * lineHeight + 4)
         .attr('font-size', '7px')
-        .text(pnText);
+        .text(d.partNumber.length > 14 ? d.partNumber.substring(0, 12) + '..' : d.partNumber);
     }
   });
   
@@ -1768,10 +1736,10 @@ async function renderGraph(tabName) {
   nodeElements.filter(d => d.receivesFrom.length > 0).each(function(d) {
     const group = d3.select(this);
     group.append('circle').attr('class', 'collapse-indicator')
-      .attr('cx', -d.width/2 + 8).attr('cy', d.height/2 - 8).attr('r', 6)
+      .attr('cx', -NODE_WIDTH/2 + 8).attr('cy', d.height/2 - 8).attr('r', 6)
       .on('click', (e) => { e.stopPropagation(); toggleCollapse(d.name); });
     group.append('text').attr('class', 'toggle-icon')
-      .attr('x', -d.width/2 + 8).attr('y', d.height/2 - 8)
+      .attr('x', -NODE_WIDTH/2 + 8).attr('y', d.height/2 - 8)
       .attr('text-anchor', 'middle').attr('dy', '0.35em')
       .text(collapsedNodes.has(d.name) ? '+' : '−')
       .on('click', (e) => { e.stopPropagation(); toggleCollapse(d.name); });
@@ -1780,11 +1748,11 @@ async function renderGraph(tabName) {
   // Simulation tick
   simulation.on('tick', () => {
     visibleNodes.forEach(n => {
-      n.x = Math.max(n.width/2 + 10, Math.min(width - n.width/2 - 10, n.x));
+      n.x = Math.max(NODE_WIDTH/2 + 10, Math.min(width - NODE_WIDTH/2 - 10, n.x));
       n.y = Math.max(n.height/2 + 10, Math.min(height - n.height/2 - 10, n.y));
     });
     
-    linkElements.attr('d', d => calculateLinkPath(d.source, d.target));
+    linkElements.attr('d', d => calculateLinkPath(d.source, d.target, NODE_WIDTH));
     
     linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
@@ -1793,7 +1761,7 @@ async function renderGraph(tabName) {
   if (!useSimulation) {
     simulation.alpha(0).stop();
     simulation.tick();
-    linkElements.attr('d', d => calculateLinkPath(d.source, d.target));
+    linkElements.attr('d', d => calculateLinkPath(d.source, d.target, NODE_WIDTH));
     linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   }
