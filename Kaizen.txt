@@ -1,6 +1,4 @@
-Remove the sequence-badge-bg. Still there a black dot on the top of block. Is there some way to remove it?
-
-Everytime I have to assig the google sheet IDs manually. Can I manually add them from the app? Or in other way, Can I write a logic such that all the sheet tabs of my google sheet will be automatically detected (google sheet tab ID) and autogenerate the dropdown list from that.
+Everytime I have to assing the google sheet IDs manually. Can I manually add them from the app? Or in other way, Can I write a logic such that all the sheet tabs of my google sheet will be automatically detected (google sheet tab ID) and autogenerate the dropdown list from that.
 
 
 

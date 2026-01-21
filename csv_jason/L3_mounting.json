@@ -1,82 +1,82 @@
 {
   "tabName": "L3_mounting",
-  "savedAt": "2026-01-17T11:27:28.901Z",
+  "savedAt": "2026-01-21T13:21:14.128Z",
   "positions": {
     "Pillar → Base assy": {
-      "x": 288,
-      "y": 711
+      "x": 83,
+      "y": 252
     },
     "L3 mounting plate 1": {
-      "x": 506,
-      "y": 710
+      "x": 85,
+      "y": 144
     },
     "L3 mounting plate 2": {
-      "x": 721,
-      "y": 709
+      "x": 263,
+      "y": 143
     },
     "L3 assy": {
-      "x": 1072,
-      "y": 702
+      "x": 479,
+      "y": 147
     },
     "L3 motor mounting block L": {
-      "x": 717,
-      "y": 465
+      "x": 1018,
+      "y": 243
     },
     "L3 motor mounting assy": {
-      "x": 857,
-      "y": 596
+      "x": 798,
+      "y": 248
     },
     "L3 motor mounting block R": {
-      "x": 626,
-      "y": 544
+      "x": 974,
+      "y": 351
     },
     "L3 motor mounting plate": {
-      "x": 980,
-      "y": 486
+      "x": 740,
+      "y": 385
     },
     "Rack gear": {
-      "x": 1371,
-      "y": 586
+      "x": 466,
+      "y": 43
     },
     "Arm assy": {
-      "x": 1157,
-      "y": 842
+      "x": 357,
+      "y": 293
     },
     "A3 motor mounting": {
-      "x": 1019,
-      "y": 946
+      "x": 517,
+      "y": 393
     },
     "A2 electronic box": {
-      "x": 954,
-      "y": 797
+      "x": 175,
+      "y": 340
     },
     "Cable carrier mounting plate 4": {
-      "x": 1237,
-      "y": 952
+      "x": 562,
+      "y": 304
     },
     "L3 Cable carrier mounting plate 1": {
-      "x": 1293,
-      "y": 786
+      "x": 275,
+      "y": 63
     },
     "L3 Cable carrier mounting plate 2": {
-      "x": 1201,
-      "y": 542
+      "x": 672,
+      "y": 68
     },
     "L3 Cable carrier mounting plate 3": {
-      "x": 893,
-      "y": 862
+      "x": 318,
+      "y": 382
     },
     "Cable carrier mounting plate 2": {
-      "x": 759,
-      "y": 969
+      "x": 318,
+      "y": 488
     },
     "EOAT": {
-      "x": 76,
-      "y": 666
+      "x": 70,
+      "y": 443
     },
     "L3 → pillar assy": {
-      "x": 1372,
-      "y": 700
+      "x": 831,
+      "y": 151
     }
   }
 }

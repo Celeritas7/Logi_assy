@@ -667,24 +667,22 @@ const NODE_WIDTH_BASE = 120;
 const NODE_WIDTH_MAX = 160;
 
 function calculateNodeWidth(name, partNumber) {
-  const fontSize = 12; // Your uniform font size
-  const charWidth = fontSize * 0.6;
-  const maxCharsPerLine = 15;
+  let width = NODE_WIDTH_BASE;
   
-  // If the name is shorter than the limit, width is based on name
-  // If longer, width is capped at the limit
-  const textLen = Math.min(name.length, maxCharsPerLine);
-  return Math.max(100, textLen * charWidth + 40); // 40px padding
-}
-
-function calculateNodeHeight(name, partNumber, fontSize = 12) {
-  const maxCharsPerLine = 15;
-  const lines = Math.ceil(name.length / maxCharsPerLine);
-  const lineHeight = fontSize + 4;
+  // Check name length
+  const nameLen = name.length;
+  if (nameLen > 15) width = Math.max(width, 130);
+  if (nameLen > 20) width = Math.max(width, 140);
   
-  let h = (lines * lineHeight) + 20; // Text height + padding
-  if (partNumber) h += 15; // Extra space for P/N
-  return Math.max(40, h);
+  // Check part number length
+  if (partNumber) {
+    const pnLen = partNumber.length;
+    if (pnLen > 12) width = Math.max(width, 135);
+    if (pnLen > 15) width = Math.max(width, 145);
+    if (pnLen > 18) width = Math.max(width, 155);
+  }
+  
+  return Math.min(width, NODE_WIDTH_MAX);
 }
 
 function getStorageKey(tabName) {
@@ -803,31 +801,6 @@ function wrapText(text, maxChars) {
   if (line) lines.push(line);
   if (lines.length > 3) { lines.length = 3; lines[2] = lines[2].substring(0, maxChars - 3) + '...'; }
   return lines;
-}
-
-function calculateFontSize(node, hasPartNumber) {
-  // Base font sizes for levels 1 through 8
-  // Level 8 is largest, Level 1 is smallest
-  const sizeMap = {
-    8: 16,
-    7: 15,
-    6: 14,
-    5: 13,
-    4: 12,
-    3: 11,
-    2: 10,
-    1: 9
-  };
-
-  let baseSize = sizeMap[node.level] || 10;
-  
-  // Slightly reduce size if a part number is present to save space
-  if (hasPartNumber) baseSize -= 1;
-  
-  // Further reduce size for very long names
-  if (node.name.length > 20) baseSize -= 1;
-
-  return baseSize;
 }
 
 function calculateFontSize(name, hasPartNumber, nodeHeight) {
@@ -1531,6 +1504,7 @@ async function renderGraph(tabName) {
   currentGraphData = graphData;
   currentTabName = tabName;
   
+  // Update group filter dropdown
   const groupSelect = document.getElementById('groupFilter');
   groupSelect.innerHTML = '<option value="all">All</option>';
   graphData.groups.forEach(g => {
@@ -1541,49 +1515,35 @@ async function renderGraph(tabName) {
   });
   
   document.getElementById('mobileIndicator').style.display = isMobile ? 'inline-block' : 'none';
+  
   if (simulation) simulation.stop();
   
-  const { nodes, links, maxLevel } = graphData;
+  const { nodes, links, maxLevel, groups } = graphData;
+  
+  // Get filters
   currentLevelFilter = document.getElementById('levelFilter').value;
   currentGroupFilter = document.getElementById('groupFilter').value;
   currentColorMode = document.getElementById('colorMode').value;
   
+  // Filter visible nodes
   const visibleNodes = nodes.filter(n => isNodeVisible(n, currentLevelFilter, currentGroupFilter, collapsedNodes));
-  
-  // === NEW LOGIC: UNIFORM FONT & DYNAMIC BLOCK SIZE ===
-  const UNIFORM_FONT_SIZE = 11; 
-  const MAX_CHARS_PER_LINE = 14;
-
-  visibleNodes.forEach(n => {
-    // 1. Calculate how many lines the text will take
-    const lines = wrapText(n.name, MAX_CHARS_PER_LINE);
-    const hasPN = n.partNumber && n.partNumber.length > 0;
-    
-    // 2. Set width based on our char limit
-    n.width = MAX_CHARS_PER_LINE * (UNIFORM_FONT_SIZE * 0.6) + 30; 
-    
-    // 3. Set height based on number of lines
-    const lineHeight = UNIFORM_FONT_SIZE + 3;
-    let totalHeight = (lines.length * lineHeight) + 25; // Add padding
-    if (hasPN) totalHeight += 12; // Add space for Part Number
-    
-    n.height = Math.max(45, totalHeight); // Ensure a minimum height
-  });
-  // ===================================================
-
   const visibleNames = new Set(visibleNodes.map(n => n.name));
   const visibleLinks = links.filter(l => visibleNames.has(l.source) && visibleNames.has(l.target));
+  
   const nodeMap = new Map(visibleNodes.map(n => [n.name, n]));
   const simLinks = visibleLinks.map(l => ({
     source: nodeMap.get(l.source), target: nodeMap.get(l.target),
     fastener: l.fastener, fastenerQty: l.fastenerQty
   })).filter(l => l.source && l.target);
   
+  // Dimensions
   const width = Math.max(1400, maxLevel * 180 + 300);
   const height = Math.max(700, visibleNodes.length * 45 + 200);
   const centerY = height / 2;
+  
   const svg = d3.select('#treeSvg').attr('width', width).attr('height', height);
   
+  // Arrow marker - refX adjusted for endpoint at node edge
   svg.append('defs').append('marker')
     .attr('id', 'arrowhead').attr('viewBox', '-0 -5 10 10')
     .attr('refX', 8).attr('refY', 0).attr('orient', 'auto')
@@ -1591,75 +1551,220 @@ async function renderGraph(tabName) {
     .append('path').attr('d', 'M 0,-4 L 8,0 L 0,4').attr('fill', '#666');
   
   const g = svg.append('g').attr('class', 'main');
+  
+  // Load positions
   const levelSpacing = 160;
   const margin = { left: 100 };
   
+  setStatus('Loading...');
   let savedPositions = null;
   let useSimulation = true;
+  
   const githubPos = await loadFromGitHub(tabName);
-  if (githubPos?.positions) { savedPositions = githubPos.positions; useSimulation = false; }
+  if (githubPos?.positions) {
+    savedPositions = githubPos.positions;
+    positionSource = 'github';
+    useSimulation = false;
+  } else {
+    const localPos = loadFromLocalStorage(tabName);
+    if (localPos?.positions) {
+      savedPositions = localPos.positions;
+      positionSource = 'local';
+      useSimulation = false;
+    } else {
+      positionSource = 'auto';
+      useSimulation = true;
+    }
+  }
   
+  setStatus('');
+  updatePositionSource(positionSource);
+  
+  // Separate spine (Group 0) and other nodes
   const spineNodes = visibleNodes.filter(n => n.group === 0).sort((a, b) => a.level - b.level);
+  const otherNodes = visibleNodes.filter(n => n.group !== 0);
   
+  // Initialize positions
   visibleNodes.forEach(n => {
     if (savedPositions?.[n.name]) {
-      n.x = savedPositions[n.name].x; n.y = savedPositions[n.name].y;
-      n.fx = n.x; n.fy = n.y;
+      n.x = savedPositions[n.name].x;
+      n.y = savedPositions[n.name].y;
+      n.fx = n.x;
+      n.fy = n.y;
     } else if (n.group === 0) {
+      // Spine: horizontal layout at center
       const spineIdx = spineNodes.indexOf(n);
-      n.x = margin.left + spineIdx * levelSpacing; n.y = centerY;
+      n.x = margin.left + spineIdx * levelSpacing;
+      n.y = centerY;
+      if (!useSimulation) { n.fx = n.x; n.fy = n.y; }
     } else {
+      // Others: position by level with vertical offset
       n.x = margin.left + (n.level - 1) * levelSpacing;
       n.y = centerY + (Math.random() - 0.5) * 300;
+      if (!useSimulation) { n.fx = n.x; n.fy = n.y; }
     }
   });
   
+  // Draw spine line
+  if (spineNodes.length > 1) {
+    const spineX1 = spineNodes[0].x - spineNodes[0].width/2 - 20;
+    const spineX2 = spineNodes[spineNodes.length - 1].x + spineNodes[spineNodes.length - 1].width/2 + 20;
+    g.append('line').attr('class', 'spine-line')
+      .attr('x1', spineX1).attr('y1', centerY)
+      .attr('x2', spineX2).attr('y2', centerY);
+  }
+  
+  // Simulation
   simulation = d3.forceSimulation(visibleNodes)
     .force('link', d3.forceLink(simLinks).id(d => d.name).distance(120).strength(0.3))
     .force('charge', d3.forceManyBody().strength(-200))
-    .force('collide', d3.forceCollide().radius(d => Math.max(d.width, d.height)/2 + 15).strength(0.8))
+    .force('collide', d3.forceCollide().radius(d => Math.max(d.width, d.height)/2 + 10).strength(0.8))
     .alphaDecay(0.03).velocityDecay(0.4);
   
+  if (useSimulation) {
+    // Spine nodes: strong horizontal constraint at centerY
+    simulation.force('spineY', d3.forceY(d => d.group === 0 ? centerY : null).strength(d => d.group === 0 ? 0.8 : 0));
+    simulation.force('spineX', d3.forceX(d => {
+      if (d.group === 0) {
+        const idx = spineNodes.indexOf(d);
+        return margin.left + idx * levelSpacing;
+      }
+      return margin.left + (d.level - 1) * levelSpacing;
+    }).strength(d => d.group === 0 ? 0.5 : 0.2));
+    
+    // Other nodes: slight vertical spread
+    simulation.force('otherY', d3.forceY(d => {
+      if (d.group === 0) return null;
+      // Above or below spine based on group
+      const offset = d.group % 2 === 1 ? -150 : 150;
+      return centerY + offset;
+    }).strength(d => d.group !== 0 ? 0.05 : 0));
+  }
+  
+  // Draw links with dynamic endpoints
   const linkElements = g.selectAll('.link').data(simLinks).enter()
     .append('path').attr('class', 'link')
     .attr('stroke', d => getFastenerColor(d.fastener) || '#999')
-    .attr('stroke-width', 1.5).attr('fill', 'none').attr('marker-end', 'url(#arrowhead)');
+    .attr('stroke-width', 1.5)
+    .attr('fill', 'none')
+    .attr('marker-end', 'url(#arrowhead)');
   
+  // Draw link labels with white background
+  const linkLabelGroups = g.selectAll('.link-label-group').data(simLinks.filter(l => l.fastener)).enter()
+    .append('g').attr('class', 'link-label-group');
+  
+  // White background rectangle (will be sized after text is added)
+  linkLabelGroups.append('rect')
+    .attr('class', 'link-label-bg')
+    .attr('fill', 'white')
+    .attr('rx', 2)
+    .attr('ry', 2);
+  
+  // Label text
+  linkLabelGroups.append('text')
+    .attr('class', 'link-label')
+    .attr('text-anchor', 'middle')
+    .attr('fill', d => getFastenerColor(d.fastener) || '#666')
+    .attr('dy', '0.35em')
+    .text(d => d.fastenerQty ? `${d.fastener}×${d.fastenerQty}` : d.fastener);
+  
+  // Size the background rectangles to fit text
+  linkLabelGroups.each(function() {
+    const group = d3.select(this);
+    const text = group.select('text');
+    const bbox = text.node().getBBox();
+    group.select('rect')
+      .attr('x', bbox.x - 3)
+      .attr('y', bbox.y - 1)
+      .attr('width', bbox.width + 6)
+      .attr('height', bbox.height + 2);
+  });
+  
+  // Draw nodes
   const nodeElements = g.selectAll('.node').data(visibleNodes).enter()
     .append('g').attr('class', 'node');
-
-  // Draw Shapes (Now uses the new dynamic d.width and d.height calculated above)
+  
+  if (!isMobile) {
+    nodeElements.call(d3.drag()
+      .on('start', function(e, d) { d.fx = null; d.fy = null; if (!e.active) simulation.alphaTarget(0.1).restart(); })
+      .on('drag', function(e, d) { d.x = e.x; d.y = e.y; d3.select(this).attr('transform', `translate(${d.x},${d.y})`); })
+      .on('end', function(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = d.x; d.fy = d.y; saveToLocalStorage(tabName, visibleNodes); updatePositionSource('local'); })
+    );
+  }
+  
+  // Tooltip
+  nodeElements.append('title').text(d => {
+    let t = d.name + `\nLevel: ${d.level}`;
+    if (d.group !== null && d.group >= 0) t += ` | Group: ${d.group}`;
+    if (d.sequenceNum) t += ` | Seq: ${d.sequenceNum}`;
+    if (d.partNumber) t += `\nP/N: ${d.partNumber}`;
+    if (d.status) t += `\nStatus: ${d.status}`;
+    return t;
+  });
+  
+  // Draw shapes
   nodeElements.each(function(d) {
     const shape = LEVEL_SHAPES[Math.min(d.level - 1, 7)];
-    let fill = (currentColorMode === 'group' && d.group !== null && d.group >= 0) 
-               ? GROUP_COLORS[d.group % GROUP_COLORS.length] 
-               : LEVEL_COLORS[Math.min(d.level - 1, 7)];
-    drawShape(d3.select(this), shape, d.width, d.height, fill, darkenColor(fill), d.isMultiParent, d.isOrphan);
+    let fill;
+    if (currentColorMode === 'group' && d.group !== null && d.group >= 0) {
+      fill = GROUP_COLORS[d.group % GROUP_COLORS.length];
+    } else {
+      fill = LEVEL_COLORS[Math.min(d.level - 1, 7)];
+    }
+    const stroke = darkenColor(fill);
+    drawShape(d3.select(this), shape, d.width, d.height, fill, stroke, d.isMultiParent, d.isOrphan);
   });
-
-  // Draw Labels (Uniform Font Size)
+  
+  // Status indicator
+  nodeElements.filter(d => d.status).append('circle')
+    .attr('class', 'status-indicator')
+    .attr('cx', d => -d.width/2 + 8).attr('cy', d => -d.height/2 + 8).attr('r', 4)
+    .attr('fill', d => getStatusColor(d.status)?.fill || '#bdc3c7')
+    .attr('stroke', d => getStatusColor(d.status)?.stroke || '#95a5a6');
+  
+  // Sequence badge
+  nodeElements.filter(d => d.sequenceNum && d.sequenceNum > 0).each(function(d) {
+    const badge = getSequenceBadge(d.sequenceNum);
+    if (!badge) return;
+    
+    const group = d3.select(this);
+    // Just the badge text, no background circle
+    group.append('text').attr('class', 'sequence-badge')
+      .attr('x', d.width/2 - 6).attr('y', -d.height/2 - 2)
+      .attr('text-anchor', 'middle').attr('dy', '0.35em')
+      .text(badge);
+  });
+  
+  // Node labels with dynamic font size
   nodeElements.each(function(d) {
     const group = d3.select(this);
-    const lines = wrapText(d.name, MAX_CHARS_PER_LINE);
-    const lineHeight = UNIFORM_FONT_SIZE + 2;
-    const totalH = lines.length * lineHeight;
     const hasPN = d.partNumber && d.partNumber.length > 0;
+    const fontSize = calculateFontSize(d.name, hasPN, d.height);
+    // Calculate max chars based on node width
+    const maxChars = Math.floor(d.width / 8);
+    const lines = wrapText(d.name, maxChars);
+    const lineHeight = fontSize + 2;
+    const totalH = lines.length * lineHeight;
     const startY = hasPN ? -totalH/2 - 4 : -totalH/2 + lineHeight/2;
     
     lines.forEach((line, i) => {
       group.append('text').attr('class', 'node-label')
         .attr('text-anchor', 'middle').attr('y', startY + i * lineHeight)
-        .attr('font-size', UNIFORM_FONT_SIZE + 'px').text(line);
+        .attr('font-size', fontSize + 'px').text(line);
     });
     
     if (hasPN) {
+      // Calculate max P/N chars based on width
+      const maxPNChars = Math.floor(d.width / 6);
+      const pnText = d.partNumber.length > maxPNChars ? d.partNumber.substring(0, maxPNChars - 2) + '..' : d.partNumber;
       group.append('text').attr('class', 'node-pn')
         .attr('text-anchor', 'middle').attr('y', startY + lines.length * lineHeight + 4)
-        .attr('font-size', '8px').attr('fill', '#444').text(d.partNumber);
+        .attr('font-size', '7px')
+        .text(pnText);
     }
   });
-
-  // Toggle/Collapse Logic
+  
+  // Collapse indicator
   nodeElements.filter(d => d.receivesFrom.length > 0).each(function(d) {
     const group = d3.select(this);
     group.append('circle').attr('class', 'collapse-indicator')
@@ -1671,15 +1776,27 @@ async function renderGraph(tabName) {
       .text(collapsedNodes.has(d.name) ? '+' : '−')
       .on('click', (e) => { e.stopPropagation(); toggleCollapse(d.name); });
   });
-
+  
+  // Simulation tick
   simulation.on('tick', () => {
     visibleNodes.forEach(n => {
       n.x = Math.max(n.width/2 + 10, Math.min(width - n.width/2 - 10, n.x));
       n.y = Math.max(n.height/2 + 10, Math.min(height - n.height/2 - 10, n.y));
     });
+    
     linkElements.attr('d', d => calculateLinkPath(d.source, d.target));
+    
+    linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
     nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
   });
+  
+  if (!useSimulation) {
+    simulation.alpha(0).stop();
+    simulation.tick();
+    linkElements.attr('d', d => calculateLinkPath(d.source, d.target));
+    linkLabelGroups.attr('transform', d => `translate(${(d.source.x + d.target.x)/2}, ${(d.source.y + d.target.y)/2})`);
+    nodeElements.attr('transform', d => `translate(${d.x},${d.y})`);
+  }
 }
 
 function toggleCollapse(name) {
